@@ -1,0 +1,13 @@
+version: "1"
+packages:
+  - name: "db"
+    path: "pkg/db"
+    queries: "./sql/query/"
+    schema: "./sql/schema/"
+    engine: "postgresql"
+overrides:
+  - go_type: "github.com/handshake-labs/blockexplorer/pkg/types.Bytes"
+    db_type: "bytea"
+  - go_type: "*github.com/handshake-labs/blockexplorer/pkg/types.Bytes"
+    db_type: "bytea"
+    nullable: true

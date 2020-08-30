@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+  postgres:
+    image:
+      postgres:12
+    volumes:
+      - ./tmp/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - 5432:5432
+  node:
+    build:
+      context: https://github.com/handshake-labs/hsd.git
+    command:
+       --http-host 0.0.0.0 --api-key=api
+    volumes:
+      - ./tmp/db:/var/lib/postgresql/data
+    volumes:
+      - ./tmp/node:/root/.node
+    ports:
+      - 12037:12037
