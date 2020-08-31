@@ -5,6 +5,7 @@ packages:
     queries: "./sql/query/"
     schema: "./sql/schema/"
     engine: "postgresql"
+    emit_empty_slices: true
 overrides:
   - go_type: "github.com/handshake-labs/blockexplorer/pkg/types.Bytes"
     db_type: "bytea"

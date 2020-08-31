@@ -9,6 +9,8 @@ CREATE TABLE tx_inputs (
   PRIMARY KEY (tx_hash, index)
 );
 
+CREATE INDEX ON tx_inputs (tx_hash);
+
 -- +goose Down
 -- SQL in this section is executed when the migration is rolled back.
 DROP TABLE tx_inputs;

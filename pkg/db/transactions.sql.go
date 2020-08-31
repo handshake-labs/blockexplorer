@@ -9,6 +9,65 @@ import (
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 )
 
+const getTransactionsByBlockHash = `-- name: GetTransactionsByBlockHash :many
+SELECT hash, block_hash, witness_tx, fee, rate, version, locktime, size, COUNT(*) OVER() as count
+FROM transactions
+WHERE block_hash = $1
+ORDER BY hash
+LIMIT $2 OFFSET $3
+`
+
+type GetTransactionsByBlockHashParams struct {
+	BlockHash types.Bytes
+	Limit     int32
+	Offset    int32
+}
+
+type GetTransactionsByBlockHashRow struct {
+	Hash      types.Bytes
+	BlockHash types.Bytes
+	WitnessTx types.Bytes
+	Fee       int64
+	Rate      int64
+	Version   int32
+	Locktime  int32
+	Size      int64
+	Count     int64
+}
+
+func (q *Queries) GetTransactionsByBlockHash(ctx context.Context, arg GetTransactionsByBlockHashParams) ([]GetTransactionsByBlockHashRow, error) {
+	rows, err := q.db.QueryContext(ctx, getTransactionsByBlockHash, arg.BlockHash, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetTransactionsByBlockHashRow{}
+	for rows.Next() {
+		var i GetTransactionsByBlockHashRow
+		if err := rows.Scan(
+			&i.Hash,
+			&i.BlockHash,
+			&i.WitnessTx,
+			&i.Fee,
+			&i.Rate,
+			&i.Version,
+			&i.Locktime,
+			&i.Size,
+			&i.Count,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertTransaction = `-- name: InsertTransaction :exec
 INSERT INTO transactions (hash, block_hash, witness_tx, fee, rate, version, locktime, size)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)

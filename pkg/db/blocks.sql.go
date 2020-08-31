@@ -19,14 +19,14 @@ func (q *Queries) DeleteBlocksAfterHeight(ctx context.Context, height int32) err
 	return err
 }
 
-const getBlockByHash = `-- name: GetBlockByHash :one
+const getBlockByHeight = `-- name: GetBlockByHeight :one
 SELECT hash, height, weight, size, version, hash_merkle_root, witness_root, tree_root, reserved_root, mask, time, bits, difficulty, chainwork, nonce, extra_nonce
 FROM blocks
-WHERE hash = $1
+WHERE height = $1
 `
 
-func (q *Queries) GetBlockByHash(ctx context.Context, hash types.Bytes) (Block, error) {
-	row := q.db.QueryRowContext(ctx, getBlockByHash, hash)
+func (q *Queries) GetBlockByHeight(ctx context.Context, height int32) (Block, error) {
+	row := q.db.QueryRowContext(ctx, getBlockByHeight, height)
 	var i Block
 	err := row.Scan(
 		&i.Hash,
@@ -63,7 +63,7 @@ func (q *Queries) GetBlockHashByHeight(ctx context.Context, height int32) (types
 }
 
 const getBlocksMaxHeight = `-- name: GetBlocksMaxHeight :one
-SELECT COALESCE(MAX(height), - 1)::integer
+SELECT COALESCE(MAX(height), -1)::integer
 FROM blocks
 `
 

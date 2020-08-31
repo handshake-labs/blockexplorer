@@ -9,6 +9,53 @@ import (
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 )
 
+const getTxOutputsByTxHash = `-- name: GetTxOutputsByTxHash :many
+SELECT tx_hash, index, value, address, covenant_action, covenant_name_hash, covenant_height, covenant_name, covenant_bid_hash, covenant_nonce, covenant_record_data, covenant_block_hash, covenant_version, covenant_address, covenant_claim_height, covenant_renewal_count
+FROM tx_outputs
+WHERE tx_hash = $1
+ORDER BY index
+`
+
+func (q *Queries) GetTxOutputsByTxHash(ctx context.Context, txHash types.Bytes) ([]TxOutput, error) {
+	rows, err := q.db.QueryContext(ctx, getTxOutputsByTxHash, txHash)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []TxOutput{}
+	for rows.Next() {
+		var i TxOutput
+		if err := rows.Scan(
+			&i.TxHash,
+			&i.Index,
+			&i.Value,
+			&i.Address,
+			&i.CovenantAction,
+			&i.CovenantNameHash,
+			&i.CovenantHeight,
+			&i.CovenantName,
+			&i.CovenantBidHash,
+			&i.CovenantNonce,
+			&i.CovenantRecordData,
+			&i.CovenantBlockHash,
+			&i.CovenantVersion,
+			&i.CovenantAddress,
+			&i.CovenantClaimHeight,
+			&i.CovenantRenewalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertTxOutput = `-- name: InsertTxOutput :exec
 INSERT INTO tx_outputs (tx_hash, index, value, address, covenant_action, covenant_name_hash, covenant_height, covenant_name, covenant_bid_hash, covenant_nonce, covenant_record_data, covenant_block_hash, covenant_version, covenant_address, covenant_claim_height, covenant_renewal_count)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)

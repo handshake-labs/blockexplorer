@@ -3,3 +3,4 @@
 export POSTGRES_URI=postgres://postgres:postgres@127.0.0.1/postgres?sslmode=disable
 export NODE_API_ORIGIN=http://127.0.0.1:12037
 export NODE_API_KEY=api
+export REST_ADDR=:8000
