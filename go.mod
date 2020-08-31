@@ -6,5 +6,7 @@ replace github.com/pingcap/parser => github.com/kyleconroy/parser v0.0.0-2020072
 
 require (
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
+	github.com/kyleconroy/sqlc v1.5.0 // indirect
 	github.com/lib/pq v1.4.0
+	github.com/randomlogin/decimal v1.2.1
 )

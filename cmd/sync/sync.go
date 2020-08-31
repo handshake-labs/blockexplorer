@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+  "log"
 
 	"github.com/handshake-labs/blockexplorer/pkg/db"
 	"github.com/handshake-labs/blockexplorer/pkg/node"
@@ -79,16 +80,19 @@ func syncBlock(pg *sql.DB, block *node.Block) error {
 		return err
 	}
 	for _, transaction := range block.Transactions {
+    log.Printf("%+v", transaction)
 		transactionParams := db.InsertTransactionParams{}
 		transactionParams.BlockHash = blockParams.Hash
 		copier.Copy(&transactionParams, &transaction)
+    log.Println(transactionParams)
 		if err = q.InsertTransaction(context.Background(), transactionParams); err != nil {
 			return err
 		}
 		for index, txInput := range transaction.TxInputs {
 			txInputParams := db.InsertTxInputParams{}
-			txInputParams.TxHash = transactionParams.Hash
-			txInputParams.Index = int32(index)
+			txInputParams.Txid = transactionParams.Txid
+			txInputParams.Index = int64(index)
+			txInputParams.BlockHash = blockParams.Hash
 			copier.Copy(&txInputParams, &txInput)
 			if err := q.InsertTxInput(context.Background(), txInputParams); err != nil {
 				return err
@@ -96,7 +100,8 @@ func syncBlock(pg *sql.DB, block *node.Block) error {
 		}
 		for _, txOutput := range transaction.TxOutputs {
 			txOutputParams := db.InsertTxOutputParams{}
-			txOutputParams.TxHash = transactionParams.Hash
+			txOutputParams.Txid = transactionParams.Txid
+			txOutputParams.BlockHash = blockParams.Hash
 			txOutputParams.CovenantAction = db.CovenantAction(txOutput.Covenant.CovenantAction)
 			copier.Copy(&txOutputParams, &txOutput)
 			covenantItems := txOutput.Covenant.CovenantItems

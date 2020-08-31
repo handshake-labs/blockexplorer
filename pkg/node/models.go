@@ -26,7 +26,7 @@ type Block struct {
 }
 
 type Transaction struct {
-	Hash       types.Bytes `json:"txid"`
+	Txid       types.Bytes `json:"txid"`
 	WitnessTx  types.Bytes `json:"hash"`
 	Fee        int64       `json:"fee"`
 	Rate       int64       `json:"rate"`
@@ -47,9 +47,8 @@ type TxInput struct {
 
 type TxOutput struct {
 	Index   int32 `json:"n"`
-	address struct {
-		string string
-	} `json:"address"`
+	Value    types.Money    `json:"value"`
+	address struct { string string } `json:"address"`
 	Covenant struct {
 		CovenantAction string        `json:"action"`
 		CovenantItems  []types.Bytes `json:"items"`

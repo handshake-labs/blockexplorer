@@ -9,11 +9,37 @@ import (
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 )
 
+const getTransactionByTxid = `-- name: GetTransactionByTxid :one
+SELECT
+    txid, witness_tx, fee, rate, block_hash, index_block, version, locktime, size
+FROM
+    transactions
+WHERE
+    txid = $1
+`
+
+func (q *Queries) GetTransactionByTxid(ctx context.Context, txid types.Bytes) (Transaction, error) {
+	row := q.db.QueryRowContext(ctx, getTransactionByTxid, txid)
+	var i Transaction
+	err := row.Scan(
+		&i.Txid,
+		&i.WitnessTx,
+		&i.Fee,
+		&i.Rate,
+		&i.BlockHash,
+		&i.IndexBlock,
+		&i.Version,
+		&i.Locktime,
+		&i.Size,
+	)
+	return i, err
+}
+
 const getTransactionsByBlockHash = `-- name: GetTransactionsByBlockHash :many
-SELECT hash, block_hash, witness_tx, fee, rate, version, locktime, size, COUNT(*) OVER() as count
+SELECT txid, witness_tx, fee, rate, block_hash, index_block, version, locktime, size, COUNT(*) OVER() as count
 FROM transactions
 WHERE block_hash = $1
-ORDER BY hash
+ORDER BY index_block
 LIMIT $2 OFFSET $3
 `
 
@@ -24,15 +50,16 @@ type GetTransactionsByBlockHashParams struct {
 }
 
 type GetTransactionsByBlockHashRow struct {
-	Hash      types.Bytes
-	BlockHash types.Bytes
-	WitnessTx types.Bytes
-	Fee       int64
-	Rate      int64
-	Version   int32
-	Locktime  int32
-	Size      int64
-	Count     int64
+	Txid       types.Bytes
+	WitnessTx  types.Bytes
+	Fee        int64
+	Rate       int64
+	BlockHash  types.Bytes
+	IndexBlock int32
+	Version    int32
+	Locktime   int32
+	Size       int64
+	Count      int64
 }
 
 func (q *Queries) GetTransactionsByBlockHash(ctx context.Context, arg GetTransactionsByBlockHashParams) ([]GetTransactionsByBlockHashRow, error) {
@@ -45,11 +72,12 @@ func (q *Queries) GetTransactionsByBlockHash(ctx context.Context, arg GetTransac
 	for rows.Next() {
 		var i GetTransactionsByBlockHashRow
 		if err := rows.Scan(
-			&i.Hash,
-			&i.BlockHash,
+			&i.Txid,
 			&i.WitnessTx,
 			&i.Fee,
 			&i.Rate,
+			&i.BlockHash,
+			&i.IndexBlock,
 			&i.Version,
 			&i.Locktime,
 			&i.Size,
@@ -69,28 +97,30 @@ func (q *Queries) GetTransactionsByBlockHash(ctx context.Context, arg GetTransac
 }
 
 const insertTransaction = `-- name: InsertTransaction :exec
-INSERT INTO transactions (hash, block_hash, witness_tx, fee, rate, version, locktime, size)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+INSERT INTO transactions (txid, witness_tx, fee, rate, block_hash, index_block, "version", locktime, "size")
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 `
 
 type InsertTransactionParams struct {
-	Hash      types.Bytes
-	BlockHash types.Bytes
-	WitnessTx types.Bytes
-	Fee       int64
-	Rate      int64
-	Version   int32
-	Locktime  int32
-	Size      int64
+	Txid       types.Bytes
+	WitnessTx  types.Bytes
+	Fee        int64
+	Rate       int64
+	BlockHash  types.Bytes
+	IndexBlock int32
+	Version    int32
+	Locktime   int32
+	Size       int64
 }
 
 func (q *Queries) InsertTransaction(ctx context.Context, arg InsertTransactionParams) error {
 	_, err := q.db.ExecContext(ctx, insertTransaction,
-		arg.Hash,
-		arg.BlockHash,
+		arg.Txid,
 		arg.WitnessTx,
 		arg.Fee,
 		arg.Rate,
+		arg.BlockHash,
+		arg.IndexBlock,
 		arg.Version,
 		arg.Locktime,
 		arg.Size,

@@ -1,4 +1,11 @@
 -- +goose Up
+-- +goose StatementBegin
+CREATE VIEW viewblock AS SELECT (hash, "height", weight, "size", "version", hash_merkle_root, witness_root, tree_root,
+  reserved_root, mask, "time", bits, difficulty, chainwork, nonce, extra_nonce, count(transactions), sum()
+from blocks, transactions, tx_inputs, tx_outputs
+where blocks.hash=transactions.block_hash AND tx_inputs.txid=transactions.txid AND tx_outputs.txid=transactions.txid;
+
+-- +goose Up
 -- SQL in this section is executed when the migration is applied.
 CREATE TABLE blocks (
     hash bytea NOT NULL PRIMARY KEY CHECK (LENGTH(hash) = 32),
@@ -20,6 +27,9 @@ CREATE TABLE blocks (
     orphan boolean NOT NULL DEFAULT FALSE
 );
 
+-- +goose StatementEnd
+
 -- +goose Down
--- SQL in this section is executed when the migration is rolled back.
-DROP TABLE blocks;
+-- +goose StatementBegin
+DROP VIEW viewblock;
+-- +goose StatementEnd

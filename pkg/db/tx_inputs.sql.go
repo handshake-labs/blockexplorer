@@ -10,14 +10,14 @@ import (
 )
 
 const getTxInputsByTxHash = `-- name: GetTxInputsByTxHash :many
-SELECT tx_hash, index, hash_prevout, index_prevout, sequence
+SELECT txid, index, hash_prevout, index_prevout, sequence, block_hash
 FROM tx_inputs
-WHERE tx_hash = $1
+WHERE txid = $1
 ORDER BY index
 `
 
-func (q *Queries) GetTxInputsByTxHash(ctx context.Context, txHash types.Bytes) ([]TxInput, error) {
-	rows, err := q.db.QueryContext(ctx, getTxInputsByTxHash, txHash)
+func (q *Queries) GetTxInputsByTxHash(ctx context.Context, txid types.Bytes) ([]TxInput, error) {
+	rows, err := q.db.QueryContext(ctx, getTxInputsByTxHash, txid)
 	if err != nil {
 		return nil, err
 	}
@@ -26,11 +26,12 @@ func (q *Queries) GetTxInputsByTxHash(ctx context.Context, txHash types.Bytes) (
 	for rows.Next() {
 		var i TxInput
 		if err := rows.Scan(
-			&i.TxHash,
+			&i.Txid,
 			&i.Index,
 			&i.HashPrevout,
 			&i.IndexPrevout,
 			&i.Sequence,
+			&i.BlockHash,
 		); err != nil {
 			return nil, err
 		}
@@ -46,25 +47,27 @@ func (q *Queries) GetTxInputsByTxHash(ctx context.Context, txHash types.Bytes) (
 }
 
 const insertTxInput = `-- name: InsertTxInput :exec
-INSERT INTO tx_inputs (tx_hash, index, hash_prevout, index_prevout, sequence)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO tx_inputs (txid, index, hash_prevout, index_prevout, sequence, block_hash)
+VALUES ($1, $2, $3, $4, $5, $6)
 `
 
 type InsertTxInputParams struct {
-	TxHash       types.Bytes
-	Index        int32
+	Txid         types.Bytes
+	Index        int64
 	HashPrevout  types.Bytes
 	IndexPrevout int64
 	Sequence     int64
+	BlockHash    types.Bytes
 }
 
 func (q *Queries) InsertTxInput(ctx context.Context, arg InsertTxInputParams) error {
 	_, err := q.db.ExecContext(ctx, insertTxInput,
-		arg.TxHash,
+		arg.Txid,
 		arg.Index,
 		arg.HashPrevout,
 		arg.IndexPrevout,
 		arg.Sequence,
+		arg.BlockHash,
 	)
 	return err
 }

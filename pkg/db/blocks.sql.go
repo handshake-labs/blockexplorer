@@ -20,7 +20,7 @@ func (q *Queries) DeleteBlocksAfterHeight(ctx context.Context, height int32) err
 }
 
 const getBlockByHeight = `-- name: GetBlockByHeight :one
-SELECT hash, height, weight, size, version, hash_merkle_root, witness_root, tree_root, reserved_root, mask, time, bits, difficulty, chainwork, nonce, extra_nonce
+SELECT hash, height, weight, size, version, hash_merkle_root, witness_root, tree_root, reserved_root, mask, time, bits, difficulty, chainwork, nonce, extra_nonce, orphan
 FROM blocks
 WHERE height = $1
 `
@@ -45,6 +45,7 @@ func (q *Queries) GetBlockByHeight(ctx context.Context, height int32) (Block, er
 		&i.Chainwork,
 		&i.Nonce,
 		&i.ExtraNonce,
+		&i.Orphan,
 	)
 	return i, err
 }
