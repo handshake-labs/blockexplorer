@@ -69,7 +69,7 @@ type Transaction struct {
 
 type TxInput struct {
 	TxHash       types.Bytes
-	Index        int32
+	Index        int16
 	HashPrevout  types.Bytes
 	IndexPrevout int64
 	Sequence     int64
@@ -77,7 +77,7 @@ type TxInput struct {
 
 type TxOutput struct {
 	TxHash               types.Bytes
-	Index                int32
+	Index                int16
 	Value                int64
 	Address              string
 	CovenantAction       CovenantAction

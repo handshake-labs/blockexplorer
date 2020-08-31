@@ -63,7 +63,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
 
 type InsertTxOutputParams struct {
 	TxHash               types.Bytes
-	Index                int32
+	Index                int16
 	Value                int64
 	Address              string
 	CovenantAction       CovenantAction

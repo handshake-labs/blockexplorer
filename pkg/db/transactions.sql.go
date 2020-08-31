@@ -10,17 +10,17 @@ import (
 )
 
 const getTransactionsByBlockHash = `-- name: GetTransactionsByBlockHash :many
-SELECT hash, block_hash, witness_tx, fee, rate, version, locktime, size, COUNT(*) OVER() as count
+SELECT hash, block_hash, witness_tx, fee, rate, version, locktime, size, (COUNT(*) OVER())::smallint as count
 FROM transactions
-WHERE block_hash = $1
+WHERE block_hash = $1::bytea
 ORDER BY hash
-LIMIT $2 OFFSET $3
+LIMIT $3::smallint OFFSET $2::smallint
 `
 
 type GetTransactionsByBlockHashParams struct {
 	BlockHash types.Bytes
-	Limit     int32
-	Offset    int32
+	Offset    int16
+	Limit     int16
 }
 
 type GetTransactionsByBlockHashRow struct {
@@ -32,11 +32,11 @@ type GetTransactionsByBlockHashRow struct {
 	Version   int32
 	Locktime  int32
 	Size      int64
-	Count     int64
+	Count     int16
 }
 
 func (q *Queries) GetTransactionsByBlockHash(ctx context.Context, arg GetTransactionsByBlockHashParams) ([]GetTransactionsByBlockHashRow, error) {
-	rows, err := q.db.QueryContext(ctx, getTransactionsByBlockHash, arg.BlockHash, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, getTransactionsByBlockHash, arg.BlockHash, arg.Offset, arg.Limit)
 	if err != nil {
 		return nil, err
 	}

@@ -18,7 +18,7 @@ AS ENUM (
 
 CREATE TABLE tx_outputs (
   tx_hash bytea NOT NULL REFERENCES transactions (hash) ON DELETE CASCADE,
-  index integer NOT NULL CHECK(index >= 0),
+  index smallint NOT NULL CHECK(index >= 0),
   value bigint NOT NULL,
   address text NOT NULL CHECK(LENGTH(address) <= 90),
   covenant_action covenant_action NOT NULL,

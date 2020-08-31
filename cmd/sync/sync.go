@@ -88,7 +88,7 @@ func syncBlock(pg *sql.DB, block *node.Block) error {
 		for index, txInput := range transaction.TxInputs {
 			txInputParams := db.InsertTxInputParams{}
 			txInputParams.TxHash = transactionParams.Hash
-			txInputParams.Index = int32(index)
+			txInputParams.Index = int16(index)
 			copier.Copy(&txInputParams, &txInput)
 			if err := q.InsertTxInput(context.Background(), txInputParams); err != nil {
 				return err
