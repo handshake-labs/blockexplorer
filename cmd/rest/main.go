@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/handshake-labs/blockexplorer/cmd/rest/actions"
-	"github.com/handshake-labs/blockexplorer/cmd/rest/handler"
 	"github.com/handshake-labs/blockexplorer/pkg/db"
 
 	_ "github.com/lib/pq"
@@ -23,15 +22,31 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	q := db.New(pg)
 
-	acs := map[string]interface{}{
-		"/block":     actions.GetBlockByHeight,
-		"/block/txs": actions.GetTransactionsByBlockHash,
+	handlers := make(map[string]http.HandlerFunc, 0)
+	for path, function := range routes {
+		handlers[path] = actions.NewAction(function).BuildHandlerFunc(q)
 	}
 
 	srv := &http.Server{
-		Addr:    os.Getenv("REST_ADDR"),
-		Handler: handler.NewHandler(db.New(pg), acs),
+		Addr: os.Getenv("REST_ADDR"),
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != "GET" {
+				w.WriteHeader(http.StatusMethodNotAllowed)
+				return
+			}
+			path := r.URL.Path
+			if path == "/" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+			if handler, ok := handlers[path]; ok {
+				handler(w, r)
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		}),
 	}
 
 	go func() {

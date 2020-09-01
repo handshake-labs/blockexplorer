@@ -7,7 +7,7 @@ import (
 	"github.com/jinzhu/copier"
 )
 
-type GetBlockByHashParams struct {
+type GetBlockByHeightParams struct {
 	Height int32 `json:"height"`
 }
 
@@ -17,7 +17,7 @@ type GetBlockByHeightResult struct {
 	NextBlockHash types.Bytes `json:"next_block_hash,omitempty"`
 }
 
-func GetBlockByHeight(ctx *Context, params *GetBlockByHashParams) (*GetBlockByHeightResult, error) {
+func GetBlockByHeight(ctx *Context, params *GetBlockByHeightParams) (*GetBlockByHeightResult, error) {
 	result := GetBlockByHeightResult{}
 	block, err := ctx.db.GetBlockByHeight(ctx, params.Height)
 	if err != nil {
