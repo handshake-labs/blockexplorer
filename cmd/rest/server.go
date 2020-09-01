@@ -1,3 +1,5 @@
+// +build !typescript
+
 package main
 
 import (
@@ -18,6 +20,7 @@ import (
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Llongfile)
+
 	pg, err := sql.Open("postgres", os.Getenv("POSTGRES_URI"))
 	if err != nil {
 		log.Fatalln(err)
