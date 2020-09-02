@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE VIEW domains AS
+CREATE VIEW names AS
 SELECT
 max(blocks.height) AS open_height,
 bids.covenant_name_hash,
@@ -54,7 +54,7 @@ transactions.block_hash = blocks.hash;
 
 -- +goose Down
 -- +goose StatementBegin
-DROP VIEW domains;
+DROP VIEW names;
 DROP VIEW records;
 DROP VIEW auctions;
 -- +goose StatementEnd
