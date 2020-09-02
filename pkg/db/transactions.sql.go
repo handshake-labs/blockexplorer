@@ -36,20 +36,29 @@ func (q *Queries) GetTransactionByTxid(ctx context.Context, txid types.Bytes) (T
 }
 
 const getTransactionsByBlockHash = `-- name: GetTransactionsByBlockHash :many
+<<<<<<< HEAD
 SELECT txid, witness_tx, fee, rate, block_hash, index_block, version, locktime, size, COUNT(*) OVER() as count
 FROM transactions
 WHERE block_hash = $1
 ORDER BY index_block
 LIMIT $2 OFFSET $3
+=======
+SELECT hash, block_hash, witness_tx, fee, rate, version, locktime, size, (COUNT(*) OVER())::smallint as count
+FROM transactions
+WHERE block_hash = $1::bytea
+ORDER BY hash
+LIMIT $3::smallint OFFSET $2::smallint
+>>>>>>> master
 `
 
 type GetTransactionsByBlockHashParams struct {
 	BlockHash types.Bytes
-	Limit     int32
-	Offset    int32
+	Offset    int16
+	Limit     int16
 }
 
 type GetTransactionsByBlockHashRow struct {
+<<<<<<< HEAD
 	Txid       types.Bytes
 	WitnessTx  types.Bytes
 	Fee        int64
@@ -60,10 +69,21 @@ type GetTransactionsByBlockHashRow struct {
 	Locktime   int32
 	Size       int64
 	Count      int64
+=======
+	Hash      types.Bytes
+	BlockHash types.Bytes
+	WitnessTx types.Bytes
+	Fee       int64
+	Rate      int64
+	Version   int32
+	Locktime  int32
+	Size      int64
+	Count     int16
+>>>>>>> master
 }
 
 func (q *Queries) GetTransactionsByBlockHash(ctx context.Context, arg GetTransactionsByBlockHashParams) ([]GetTransactionsByBlockHashRow, error) {
-	rows, err := q.db.QueryContext(ctx, getTransactionsByBlockHash, arg.BlockHash, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, getTransactionsByBlockHash, arg.BlockHash, arg.Offset, arg.Limit)
 	if err != nil {
 		return nil, err
 	}

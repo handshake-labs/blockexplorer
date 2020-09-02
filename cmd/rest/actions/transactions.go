@@ -8,22 +8,26 @@ import (
 
 type GetTransactionsByBlockHashParams struct {
 	BlockHash types.Bytes `json:"hash"`
-	Page      uint32      `json:"page"`
+	Page      int16       `json:"page"`
 }
 
 type GetTransactionsByBlockHashResult struct {
 	Transactions []Transaction `json:"txs"`
-	Count        int64         `json:"count"`
-	Limit        int32         `json:"limit"`
+	Count        int16         `json:"count"`
+	Limit        int16         `json:"limit"`
 }
 
 func GetTransactionsByBlockHash(ctx *Context, params *GetTransactionsByBlockHashParams) (*GetTransactionsByBlockHashResult, error) {
 	result := GetTransactionsByBlockHashResult{}
 	result.Limit = 50
+	var page int16 = params.Page
+	if page < 0 {
+		page = 0
+	}
 	transactions, err := ctx.db.GetTransactionsByBlockHash(ctx, db.GetTransactionsByBlockHashParams{
 		BlockHash: params.BlockHash,
 		Limit:     result.Limit,
-		Offset:    int32(params.Page) * result.Limit,
+		Offset:    page * result.Limit,
 	})
 	if err != nil {
 		return nil, err

@@ -7,7 +7,8 @@ CREATE TABLE tx_inputs (
     index_prevout bigint NOT NULL, -- txin_witness bytea NOT NULL CHECK (LENGTH(txin_witness) = 32),
     "sequence" bigint NOT NULL,
     block_hash bytea NOT NULL,
-    FOREIGN KEY (txid, block_hash) REFERENCES transactions (txid, block_hash) ON DELETE CASCADE
+    FOREIGN KEY (txid, block_hash) REFERENCES transactions (txid, block_hash) ON DELETE CASCADE,
+    PRIMARY KEY (txid, index)
 );
 
 CREATE INDEX tx_inputs_txid_index ON tx_inputs USING btree (txid);

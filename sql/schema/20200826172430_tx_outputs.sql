@@ -16,7 +16,7 @@ AS ENUM ('NONE',
 
 CREATE TABLE tx_outputs (
     txid bytea NOT NULL, --tx hash in which output occured
-    index integer NOT NULL,
+    index integer NOT NULL CHECK(index >= 0),
     value bigint NOT NULL,
     block_hash bytea NOT NULL,
     address varchar(90) NOT NULL, --can be null for coinbase transactions
