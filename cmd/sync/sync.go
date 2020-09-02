@@ -5,7 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-  "log"
+  // "log"
 
 	"github.com/handshake-labs/blockexplorer/pkg/db"
 	"github.com/handshake-labs/blockexplorer/pkg/node"
@@ -80,11 +80,11 @@ func syncBlock(pg *sql.DB, block *node.Block) error {
 		return err
 	}
 	for _, transaction := range block.Transactions {
-    log.Printf("%+v", transaction)
+    // log.Printf("%+v", transaction)
 		transactionParams := db.InsertTransactionParams{}
 		transactionParams.BlockHash = blockParams.Hash
 		copier.Copy(&transactionParams, &transaction)
-    log.Println(transactionParams)
+    // log.Println(transactionParams)
 		if err = q.InsertTransaction(context.Background(), transactionParams); err != nil {
 			return err
 		}
