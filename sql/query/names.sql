@@ -11,3 +11,10 @@
 
 -- name: GetNameRecordHistoryByNameHash :many 
 -- SELECT height, covenant_record_data FROM records WHERE covenant_name_hash = $1 ORDER BY height DESC;
+
+
+-- name: GetReservedByName :one
+SELECT * FROM reserved_names WHERE name = $1;
+
+-- name: GetReservedByNameHash :one
+SELECT * FROM reserved_names WHERE name_hash = $1;

@@ -9,93 +9,35 @@ import (
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 )
 
-const getAuctionHistory = `-- name: GetAuctionHistory :many
-SELECT height, transactions.txid, A.value AS lockup, B.value AS reveal, A.covenant_action FROM transactions, blocks,
-tx_outputs A LEFT OUTER JOIN tx_outputs B ON (A.covenant_name_hash = B.covenant_name_hash AND B.covenant_action =
-  'REVEAL' AND A.address = B.address AND A.covenant_action = 'BID') WHERE A.txid=transactions.txid AND
-transactions.block_hash = blocks.hash AND A.covenant_name_hash=$1 ORDER BY height DESC
-`
+const getAuctionHistoryByNameHash = `-- name: GetAuctionHistoryByNameHash :many
 
-type GetAuctionHistoryRow struct {
-	Height         int32
-	Txid           types.Bytes
-	Lockup         int64
-	Reveal         int64
-	CovenantAction CovenantAction
-}
+
+
+
+
+SELECT name, origin_name, name_hash, claim_amount FROM reserved_names WHERE name = $1
+`
 
 // get auction history of a name with reveals, input parameter - hash of the name
-func (q *Queries) GetAuctionHistory(ctx context.Context, covenantNameHash *types.Bytes) ([]GetAuctionHistoryRow, error) {
-	rows, err := q.db.QueryContext(ctx, getAuctionHistory, covenantNameHash)
+// SELECT * FROM auctions WHERE covenant_name_hash=$1 ORDER BY height DESC;
+// get auction history of a name with reveals, input parameter - the name
+// SELECT * FROM auctions WHERE covenant_name=$1 ORDER BY height DESC;
+// SELECT * FROM names ORDER BY max_lockup desc;
+// SELECT height, covenant_record_data FROM records WHERE covenant_name_hash = $1 ORDER BY height DESC;
+func (q *Queries) GetAuctionHistoryByNameHash(ctx context.Context, name types.Bytes) ([]ReservedName, error) {
+	rows, err := q.db.QueryContext(ctx, getAuctionHistoryByNameHash, name)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []GetAuctionHistoryRow{}
+	items := []ReservedName{}
 	for rows.Next() {
-		var i GetAuctionHistoryRow
-		if err := rows.Scan(
-			&i.Height,
-			&i.Txid,
-			&i.Lockup,
-			&i.Reveal,
-			&i.CovenantAction,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getNameOpeningBlock = `-- name: GetNameOpeningBlock :one
-SELECT (height) FROM tx_outputs, transactions, blocks WHERE covenant_name = $1 AND covenant_action = 'OPEN' AND
-tx_outputs.txid = transactions.txid AND blocks.hash = block_hash
-`
-
-func (q *Queries) GetNameOpeningBlock(ctx context.Context, covenantName *types.Bytes) (int32, error) {
-	row := q.db.QueryRowContext(ctx, getNameOpeningBlock, covenantName)
-	var height int32
-	err := row.Scan(&height)
-	return height, err
-}
-
-const getTopList = `-- name: GetTopList :many
-SELECT bids.covenant_name AS name, max(lockups.value) AS max_lockup, max(reveals.value) AS max_revealed,
-count(distinct(reveals.txid, reveals.index_out)) AS bidcount FROM tx_outputs lockups, tx_outputs reveals LEFT OUTER JOIN
-tx_outputs bids ON (reveals.covenant_name_hash = bids.covenant_name_hash) WHERE lockups.covenant_name_hash =
-bids.covenant_name_hash AND reveals.covenant_action = 'REVEAL' AND (bids.covenant_action='BID') GROUP BY
-bids.covenant_name ORDER BY lockup DESC
-`
-
-type GetTopListRow struct {
-	Name        *types.Bytes
-	MaxLockup   interface{}
-	MaxRevealed interface{}
-	Bidcount    int64
-}
-
-// domain top list by lockup with count and revealed values
-func (q *Queries) GetTopList(ctx context.Context) ([]GetTopListRow, error) {
-	rows, err := q.db.QueryContext(ctx, getTopList)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetTopListRow{}
-	for rows.Next() {
-		var i GetTopListRow
+		var i ReservedName
 		if err := rows.Scan(
 			&i.Name,
-			&i.MaxLockup,
-			&i.MaxRevealed,
-			&i.Bidcount,
+			&i.OriginName,
+			&i.NameHash,
+			&i.ClaimAmount,
 		); err != nil {
 			return nil, err
 		}
@@ -108,4 +50,20 @@ func (q *Queries) GetTopList(ctx context.Context) ([]GetTopListRow, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getReservedByNameHash = `-- name: GetReservedByNameHash :one
+SELECT name, origin_name, name_hash, claim_amount FROM reserved_names WHERE name_hash = $1
+`
+
+func (q *Queries) GetReservedByNameHash(ctx context.Context, nameHash types.Bytes) (ReservedName, error) {
+	row := q.db.QueryRowContext(ctx, getReservedByNameHash, nameHash)
+	var i ReservedName
+	err := row.Scan(
+		&i.Name,
+		&i.OriginName,
+		&i.NameHash,
+		&i.ClaimAmount,
+	)
+	return i, err
 }
