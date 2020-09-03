@@ -4,6 +4,7 @@ import (
 	"github.com/handshake-labs/blockexplorer/pkg/db"
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 	"github.com/jinzhu/copier"
+  "log"
 )
 
 type GetTransactionsByBlockHashParams struct {
@@ -19,6 +20,7 @@ type GetTransactionsByBlockHashResult struct {
 
 func GetTransactionsByBlockHash(ctx *Context, params *GetTransactionsByBlockHashParams) (*GetTransactionsByBlockHashResult, error) {
 	result := GetTransactionsByBlockHashResult{}
+  log.Println("www")
 	result.Limit = 50
 	var page int16 = params.Page
 	if page < 0 {
@@ -37,11 +39,11 @@ func GetTransactionsByBlockHash(ctx *Context, params *GetTransactionsByBlockHash
 	}
 	result.Count = transactions[0].Count
 	for _, transaction := range transactions {
-		txInputs, err := ctx.db.GetTxInputsByTxHash(ctx, transaction.Hash)
+		txInputs, err := ctx.db.GetTxInputsByTxid(ctx, transaction.Txid)
 		if err != nil {
 			return nil, err
 		}
-		txOutputs, err := ctx.db.GetTxOutputsByTxHash(ctx, transaction.Hash)
+		txOutputs, err := ctx.db.GetTxOutputsByTxid(ctx, transaction.Txid)
 		if err != nil {
 			return nil, err
 		}

@@ -1,4 +1,4 @@
--- name: GetTxOutputByTxid :many
+-- name: GetTxOutputsByTxid :many
 SELECT * FROM tx_outputs WHERE "txid" = $1
 ORDER BY index;
 

@@ -26,6 +26,7 @@ func main() {
 		log.Fatalln(err)
 	}
 	q := db.New(pg)
+  log.Println("asf")
 
 	handlers := make(map[string]http.HandlerFunc, 0)
 	for path, function := range routes {
@@ -44,10 +45,13 @@ func main() {
 				w.WriteHeader(http.StatusOK)
 				return
 			}
+      log.Println(path)
 			if handler, ok := handlers[path]; ok {
+        log.Println("bbb")
 				handler(w, r)
 				return
 			}
+      log.Println("aaa")
 			w.WriteHeader(http.StatusNotFound)
 		}),
 	}

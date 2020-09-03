@@ -9,13 +9,13 @@ import (
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 )
 
-const getTxOutputByTxid = `-- name: GetTxOutputByTxid :many
+const getTxOutputsByTxid = `-- name: GetTxOutputsByTxid :many
 SELECT txid, index, value, block_hash, address, covenant_action, covenant_name_hash, covenant_height, covenant_name, covenant_bid_hash, covenant_nonce, covenant_record_data, covenant_block_hash, covenant_version, covenant_address, covenant_claim_height, covenant_renewal_count FROM tx_outputs WHERE "txid" = $1
 ORDER BY index
 `
 
-func (q *Queries) GetTxOutputByTxid(ctx context.Context, txid types.Bytes) ([]TxOutput, error) {
-	rows, err := q.db.QueryContext(ctx, getTxOutputByTxid, txid)
+func (q *Queries) GetTxOutputsByTxid(ctx context.Context, txid types.Bytes) ([]TxOutput, error) {
+	rows, err := q.db.QueryContext(ctx, getTxOutputsByTxid, txid)
 	if err != nil {
 		return nil, err
 	}

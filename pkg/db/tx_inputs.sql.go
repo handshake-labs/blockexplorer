@@ -9,15 +9,15 @@ import (
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 )
 
-const getTxInputsByTxHash = `-- name: GetTxInputsByTxHash :many
+const getTxInputsByTxid = `-- name: GetTxInputsByTxid :many
 SELECT txid, index, hash_prevout, index_prevout, sequence, block_hash
 FROM tx_inputs
 WHERE txid = $1
 ORDER BY index
 `
 
-func (q *Queries) GetTxInputsByTxHash(ctx context.Context, txid types.Bytes) ([]TxInput, error) {
-	rows, err := q.db.QueryContext(ctx, getTxInputsByTxHash, txid)
+func (q *Queries) GetTxInputsByTxid(ctx context.Context, txid types.Bytes) ([]TxInput, error) {
+	rows, err := q.db.QueryContext(ctx, getTxInputsByTxid, txid)
 	if err != nil {
 		return nil, err
 	}
