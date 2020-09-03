@@ -57,16 +57,23 @@ type Block struct {
 	Orphan         bool
 }
 
+type ReservedName struct {
+	Name        types.Bytes
+	OriginName  types.Bytes
+	NameHash    types.Bytes
+	ClaimAmount int64
+}
+
 type Transaction struct {
-	Txid       types.Bytes
-	WitnessTx  types.Bytes
-	Fee        int64
-	Rate       int64
-	BlockHash  types.Bytes
-	IndexBlock int32
-	Version    int32
-	Locktime   int32
-	Size       int64
+	Txid      types.Bytes
+	WitnessTx types.Bytes
+	Fee       int64
+	Rate      int64
+	BlockHash types.Bytes
+	Index     int32
+	Version   int32
+	Locktime  int32
+	Size      int64
 }
 
 type TxInput struct {

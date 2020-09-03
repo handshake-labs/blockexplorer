@@ -381,13 +381,8 @@ INSERT INTO tx_outputs (txid, index, value, block_hash, address, covenant_action
 `
 
 type InsertTxOutputParams struct {
-<<<<<<< HEAD
 	Txid                 types.Bytes
 	Index                int32
-=======
-	TxHash               types.Bytes
-	Index                int16
->>>>>>> master
 	Value                int64
 	BlockHash            types.Bytes
 	Address              string

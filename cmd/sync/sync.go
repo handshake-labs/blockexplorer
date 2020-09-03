@@ -79,10 +79,11 @@ func syncBlock(pg *sql.DB, block *node.Block) error {
 	if err := q.InsertBlock(context.Background(), blockParams); err != nil {
 		return err
 	}
-	for _, transaction := range block.Transactions {
+	for tx_index, transaction := range block.Transactions {
     // log.Printf("%+v", transaction)
 		transactionParams := db.InsertTransactionParams{}
 		transactionParams.BlockHash = blockParams.Hash
+		transactionParams.Index = int32(tx_index)
 		copier.Copy(&transactionParams, &transaction)
     // log.Println(transactionParams)
 		if err = q.InsertTransaction(context.Background(), transactionParams); err != nil {

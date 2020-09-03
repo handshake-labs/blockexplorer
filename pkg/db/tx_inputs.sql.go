@@ -52,13 +52,8 @@ VALUES ($1, $2, $3, $4, $5, $6)
 `
 
 type InsertTxInputParams struct {
-<<<<<<< HEAD
 	Txid         types.Bytes
 	Index        int64
-=======
-	TxHash       types.Bytes
-	Index        int16
->>>>>>> master
 	HashPrevout  types.Bytes
 	IndexPrevout int64
 	Sequence     int64
