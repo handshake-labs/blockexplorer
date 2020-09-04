@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE VIEW names AS
+CREATE MATERIALIZED VIEW names AS
 SELECT
 max(blocks.height) AS open_height,
 bids.covenant_name_hash,

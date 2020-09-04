@@ -9,49 +9,6 @@ import (
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 )
 
-const getAuctionHistoryByNameHash = `-- name: GetAuctionHistoryByNameHash :many
-
-
-
-
-
-SELECT name, origin_name, name_hash, claim_amount FROM reserved_names WHERE name = $1
-`
-
-// get auction history of a name with reveals, input parameter - hash of the name
-// SELECT * FROM auctions WHERE covenant_name_hash=$1 ORDER BY height DESC;
-// get auction history of a name with reveals, input parameter - the name
-// SELECT * FROM auctions WHERE covenant_name=$1 ORDER BY height DESC;
-// SELECT * FROM names ORDER BY max_lockup desc;
-// SELECT height, covenant_record_data FROM records WHERE covenant_name_hash = $1 ORDER BY height DESC;
-func (q *Queries) GetAuctionHistoryByNameHash(ctx context.Context, name types.Bytes) ([]ReservedName, error) {
-	rows, err := q.db.QueryContext(ctx, getAuctionHistoryByNameHash, name)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ReservedName{}
-	for rows.Next() {
-		var i ReservedName
-		if err := rows.Scan(
-			&i.Name,
-			&i.OriginName,
-			&i.NameHash,
-			&i.ClaimAmount,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getReservedByNameHash = `-- name: GetReservedByNameHash :one
 SELECT name, origin_name, name_hash, claim_amount FROM reserved_names WHERE name_hash = $1
 `
@@ -66,4 +23,130 @@ func (q *Queries) GetReservedByNameHash(ctx context.Context, nameHash types.Byte
 		&i.ClaimAmount,
 	)
 	return i, err
+}
+
+const getAuctionHistoryByName = `-- name: GetAuctionHistoryByName :many
+SELECT
+height,
+txid,
+covenant_name,
+lockup,
+reveal,
+covenant_action,
+covenant_record_data,
+covenant_name_hash
+FROM auctions
+WHERE covenant_name = $1 
+ORDER BY height DESC;
+`
+
+func (q *Queries) GetAuctionHistoryByName(ctx context.Context, name string) ([]AuctionHistoryRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAuctionHistoryByName, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AuctionHistoryRow{}
+	for rows.Next() {
+		var i AuctionHistoryRow
+		if err := rows.Scan(
+			&i.Height,
+			&i.Txid,
+			&i.CovenantName,
+			&i.LockupValue,
+			&i.RevealValue,
+			&i.CovenantAction,
+			&i.CovenantRecordData,
+			&i.CovenantNameHash,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+
+const getMostExpensiveNames = `-- name: GetMostExpensiveNames :many
+SELECT
+open_height,
+covenant_name_hash,
+name,
+max_lockup,
+max_revealed,
+bidcount
+FROM names
+ORDER BY max_lockup DESC LIMIT 50;
+`
+
+func (q *Queries) GetMostExpensiveNames(ctx context.Context) ([]NameRow, error) {
+	rows, err := q.db.QueryContext(ctx, getMostExpensiveNames)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []NameRow{}
+	for rows.Next() {
+		var i NameRow
+		if err := rows.Scan(
+			&i.OpenHeight,
+			&i.CovenantNameHash,
+			&i.CovenantName,
+			&i.MaxLockup,
+			&i.MaxRevealed,
+			&i.BidCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+
+const getNameRecordHistoryByNameHash = `-- name: GetNameRecordHistoryByNameHash :many 
+SELECT height, covenant_record_data
+FROM records
+WHERE covenant_name_hash = $1
+ORDER BY height DESC;
+`
+
+func (q *Queries) GetNameRecordHistoryByNameHash(ctx context.Context, nameHash types.Bytes) ([]RecordRow, error) {
+	rows, err := q.db.QueryContext(ctx, getNameRecordHistoryByNameHash)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []RecordRow{}
+	for rows.Next() {
+		var i RecordRow
+		if err := rows.Scan(
+			&i.Height,
+			&i.CovenantRecordData,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+
+
 }

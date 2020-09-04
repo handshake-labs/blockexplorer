@@ -104,3 +104,35 @@ type TxOutput struct {
 	CovenantClaimHeight  *types.Bytes
 	CovenantRenewalCount *types.Bytes
 }
+
+type AuctionHistoryRow struct {
+  Height int32 
+  Txid types.Bytes
+  CovenantName *types.Bytes
+  LockupValue int64
+  RevealValue NullInt
+  // RevealValue int64
+  CovenantAction *types.Bytes
+  CovenantRecordData *types.Bytes
+  CovenantNameHash *types.Bytes
+}
+
+type NullInt struct {
+  Valid bool
+  Value int64
+}
+
+type NameRow struct {
+  OpenHeight int32
+  CovenantNameHash types.Bytes
+  CovenantName types.Bytes
+  MaxLockup int64
+  MaxRevealed int64
+  BidCount int16
+}
+
+type RecordRow struct {
+  Height int32
+  CovenantRecordData types.Bytes
+}
+
