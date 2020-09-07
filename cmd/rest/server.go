@@ -44,10 +44,15 @@ func main() {
 				w.WriteHeader(http.StatusOK)
 				return
 			}
+			// log.Printf("+v%", path)
+			// log.Printf("%+v", w)
+			// log.Printf("%+v", r)
 			if handler, ok := handlers[path]; ok {
+				// log.Println("bbb")
 				handler(w, r)
 				return
 			}
+			// log.Println("aaa")
 			w.WriteHeader(http.StatusNotFound)
 		}),
 	}

@@ -54,31 +54,42 @@ type Block struct {
 	Chainwork      types.Bytes
 	Nonce          int64
 	ExtraNonce     types.Bytes
+	Orphan         bool
+}
+
+type ReservedName struct {
+	Name        types.Bytes
+	OriginName  types.Bytes
+	NameHash    types.Bytes
+	ClaimAmount int64
 }
 
 type Transaction struct {
-	Hash      types.Bytes
-	BlockHash types.Bytes
+	Txid      types.Bytes
 	WitnessTx types.Bytes
 	Fee       int64
 	Rate      int64
+	BlockHash types.Bytes
+	Index     int32
 	Version   int32
 	Locktime  int32
 	Size      int64
 }
 
 type TxInput struct {
-	TxHash       types.Bytes
-	Index        int16
+	Txid         types.Bytes
+	Index        int64
 	HashPrevout  types.Bytes
 	IndexPrevout int64
 	Sequence     int64
+	BlockHash    types.Bytes
 }
 
 type TxOutput struct {
-	TxHash               types.Bytes
-	Index                int16
+	Txid                 types.Bytes
+	Index                int32
 	Value                int64
+	BlockHash            types.Bytes
 	Address              string
 	CovenantAction       CovenantAction
 	CovenantNameHash     *types.Bytes

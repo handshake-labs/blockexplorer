@@ -3,6 +3,7 @@
 package node
 
 import "github.com/handshake-labs/blockexplorer/pkg/types"
+// import "log"
 
 type Block struct {
 	Hash           types.Bytes   `json:"hash"`
@@ -26,7 +27,7 @@ type Block struct {
 }
 
 type Transaction struct {
-	Hash       types.Bytes `json:"txid"`
+	Txid       types.Bytes `json:"txid"`
 	WitnessTx  types.Bytes `json:"hash"`
 	Fee        int64       `json:"fee"`
 	Rate       int64       `json:"rate"`
@@ -47,9 +48,10 @@ type TxInput struct {
 
 type TxOutput struct {
 	Index   int32 `json:"n"`
-	address struct {
-		string string
-	} `json:"address"`
+	Value    types.Money    `json:"value"`
+  MyAddress struct { // to prevent conflict with method of the same name
+    String string `json:"string"` 
+  } `json:"address"`
 	Covenant struct {
 		CovenantAction string        `json:"action"`
 		CovenantItems  []types.Bytes `json:"items"`
@@ -57,5 +59,6 @@ type TxOutput struct {
 }
 
 func (txOutput *TxOutput) Address() string {
-	return txOutput.address.string
+  // log.Printf("%+v", txOutput)
+	return txOutput.MyAddress.String
 }

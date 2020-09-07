@@ -27,7 +27,7 @@ type Block struct {
 }
 
 type Transaction struct {
-	Hash      types.Bytes `json:"hash"`
+	Txid      types.Bytes `json:"txid"`
 	WitnessTx types.Bytes `json:"witnessTx"`
 	Fee       int64       `json:"fee"`
 	Rate      int64       `json:"rate"`

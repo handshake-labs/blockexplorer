@@ -12,5 +12,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pressly/goose v2.6.0+incompatible // indirect
+	github.com/randomlogin/decimal v1.2.1
 	github.com/ziutek/mymysql v1.5.4 // indirect
+	golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59
 )
