@@ -9,6 +9,6 @@ var routes = map[string]interface{}{
 	"/block/txs": GetTransactionsByBlockHash,
   "/lists/expensive":  GetTopList,
   "/lists/bids":  GetTopList,
-  // "/names/record":  GetRecordHistory,
+  "/names/records":  GetRecordsByName,
   "/names/auction":  GetAuctionHistoryByName,
 }

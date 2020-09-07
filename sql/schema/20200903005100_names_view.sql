@@ -21,4 +21,4 @@ bids.covenant_name, bids.covenant_name_hash;
 
 
 -- +goose Down
-DROP VIEW names;
+DROP MATERIALIZED VIEW names;

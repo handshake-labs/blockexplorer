@@ -5,7 +5,6 @@ import (
 
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 	"github.com/jinzhu/copier"
-  "log"
 )
 
 type GetBlockByHeightParams struct {
@@ -19,7 +18,6 @@ type GetBlockByHeightResult struct {
 }
 
 func GetBlockByHeight(ctx *Context, params *GetBlockByHeightParams) (*GetBlockByHeightResult, error) {
-  log.Println("zzzzzz")
 	result := GetBlockByHeightResult{}
 	block, err := ctx.db.GetBlockByHeight(ctx, params.Height)
 	if err != nil {

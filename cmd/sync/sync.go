@@ -5,7 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-  // "log"
+	// "log"
 
 	"github.com/handshake-labs/blockexplorer/pkg/db"
 	"github.com/handshake-labs/blockexplorer/pkg/node"
@@ -16,6 +16,7 @@ import (
 
 func syncBlocks(pg *sql.DB, nc *node.Client) error {
 	height, hash, err := getSyncedHead(pg, nc)
+	// q := db.New(pg)
 	if err != nil {
 		return err
 	}
@@ -38,6 +39,7 @@ func syncBlocks(pg *sql.DB, nc *node.Client) error {
 		}
 		hash = block.Hash
 	}
+	// q.RefreshViews(context.Background())
 	return nil
 }
 
@@ -80,12 +82,12 @@ func syncBlock(pg *sql.DB, block *node.Block) error {
 		return err
 	}
 	for tx_index, transaction := range block.Transactions {
-    // log.Printf("%+v", transaction)
+		// log.Printf("%+v", transaction)
 		transactionParams := db.InsertTransactionParams{}
 		transactionParams.BlockHash = blockParams.Hash
 		transactionParams.Index = int32(tx_index)
 		copier.Copy(&transactionParams, &transaction)
-    // log.Println(transactionParams)
+		// log.Println(transactionParams)
 		if err = q.InsertTransaction(context.Background(), transactionParams); err != nil {
 			return err
 		}
@@ -101,6 +103,7 @@ func syncBlock(pg *sql.DB, block *node.Block) error {
 		}
 		for _, txOutput := range transaction.TxOutputs {
 			txOutputParams := db.InsertTxOutputParams{}
+			// log.Printf("%+v", txOutput)
 			txOutputParams.Txid = transactionParams.Txid
 			txOutputParams.BlockHash = blockParams.Hash
 			txOutputParams.CovenantAction = db.CovenantAction(txOutput.Covenant.CovenantAction)
