@@ -19,6 +19,7 @@ blocks.hash = transactions.block_hash
 GROUP BY
 bids.covenant_name, bids.covenant_name_hash;
 
+CREATE UNIQUE INDEX names_hash_index ON names (name);
 
 -- +goose Down
 DROP MATERIALIZED VIEW names;

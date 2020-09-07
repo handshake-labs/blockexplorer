@@ -16,7 +16,7 @@ import (
 
 func syncBlocks(pg *sql.DB, nc *node.Client) error {
 	height, hash, err := getSyncedHead(pg, nc)
-	// q := db.New(pg)
+	q := db.New(pg)
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func syncBlocks(pg *sql.DB, nc *node.Client) error {
 		}
 		hash = block.Hash
 	}
-	// q.RefreshViews(context.Background())
+	q.RefreshViews(context.Background())
 	return nil
 }
 
