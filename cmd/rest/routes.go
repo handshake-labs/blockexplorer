@@ -5,10 +5,11 @@ import (
 )
 
 var routes = map[string]interface{}{
-	"/block":     GetBlockByHeight,
-	"/block/txs": GetTransactionsByBlockHash,
-  "/lists/expensive":  GetTopList,
-  "/lists/bids":  GetTopList,
-  "/names/records":  GetRecordsByName,
-  "/names/auction":  GetAuctionHistoryByName,
+	"/block":           GetBlockByHeight,
+	"/block/txs":       GetTransactionsByBlockHash,
+	"/tx":              GetTransactionByTxid,
+	"/lists/expensive": GetTopList,
+	"/lists/bids":      GetTopList,
+	"/names/records":   GetRecordsByName,
+	"/names/auction":   GetAuctionHistoryByName,
 }
