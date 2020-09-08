@@ -60,65 +60,24 @@ type TxOutput struct {
 }
 
 func (txOutput *TxOutput) Address() string {
-	// log.Printf("%+v", txOutput)
 	return txOutput.MyAddress.String
 }
 
 type MempoolTx struct {
-	Txid      types.Bytes `json:"hash"`
-	WitnessTx types.Bytes `json:"witnessHash"`
-	Mtime     int64       `json:"mtime"`
-	Version   int32       `json:"version"`
-	// Fee        int64       `json:"fee"`
-	// Rate       int64       `json:"rate"`
-	// BlockHash  types.Bytes `json:"blockHash"`
-	// IndexBlock int32       `json:"index"`
-	Locktime int32 `json:"locktime"`
-	// Size       int64       `json:"size"`
-	// TxInputs   []TxInput   `json:"vin"`
-	// 	WitnessTx  types.Bytes `json:"hash"`
+	Txid      types.Bytes       `json:"hash"`
+	WitnessTx types.Bytes       `json:"witnessHash"`
+	Mtime     int64             `json:"mtime"`
+	Version   int32             `json:"version"`
+	Locktime  int32             `json:"locktime"`
+	TxInputs  []TxInput         `json:"inputs"`
+	TxOutputs []MempoolTxOutput `json:"outputs"`
 }
 
-// {
-//             "inputs": [
-//                 {
-//                     "prevout": {
-//                         "hash": "df06bf8381130ae14644ceec4272297e9db112df4bfaab028099d5b7f7e1e3b0",
-//                         "index": 1
-//                     },
-//                     "witness": [
-//                         "1211e854e99719a1bce9fcb6dd27d6bf4f30d696d8d57cabe06315fa20c58a5c6d55c66055d3d182c6fac050a4f077fc166928c09eea2dd2532671b1820c8b3901",
-//                         "03de837a91d582f70a89d26e4fb370336635f30fe29045fa4af13c8d274acbc2d9"
-//                     ],
-//                     "sequence": 4294967295,
-//                     "address": "hs1qr237ngcel5tv52pzpvef8z68ry0xvr82x256pl"
-//                 }
-//             ],
-//             "outputs": [
-//                 {
-//                     "value": 12000000,
-//                     "address": "hs1qgkn49gwdfj4a6pkphj6lqsm0hl34my79ruwqd5",
-//                     "covenant": {
-//                         "type": 3,
-//                         "action": "BID",
-//                         "items": [
-//                             "c59a58701522b312950107294004b1e113d9e70b532a19869b822015c645b775",
-//                             "147a0000",
-//                             "796773",
-//                             "7698624a090205698b3295bbc2a237b10d4064a92336339e97d3dfdf61384dc2"
-//                         ]
-//                     }
-//                 },
-//                 {
-//                     "value": 22679559199,
-//                     "address": "hs1q3rs94lzjady5zaj38uqrj8vxhf0rsnh63nqmju",
-//                     "covenant": {
-//                         "type": 0,
-//                         "action": "NONE",
-//                         "items": []
-//                     }
-//                 }
-//             ],
-//             "locktime": 0,
-//             "hex": "0000000001df06bf8381130ae14644ceec4272297e9db112df4bfaab028099d5b7f7e1e3b001000000ffffffff02001bb70000000000001445a752a1cd4cabdd06c1bcb5f0436fbfe35d93c5030420c59a58701522b312950107294004b1e113d9e70b532a19869b822015c645b77504147a000003796773207698624a090205698b3295bbc2a237b10d4064a92336339e97d3dfdf61384dc21f9cce4705000000001488e05afc52eb494176513f00391d86ba5e384efa00000000000002411211e854e99719a1bce9fcb6dd27d6bf4f30d696d8d57cabe06315fa20c58a5c6d55c66055d3d182c6fac050a4f077fc166928c09eea2dd2532671b1820c8b39012103de837a91d582f70a89d26e4fb370336635f30fe29045fa4af13c8d274acbc2d9"
-//         }
+type MempoolTxOutput struct {
+	Value    types.Money `json:"value"`
+	Address  string      `json:"address"`
+	Covenant struct {
+		CovenantAction string        `json:"action"`
+		CovenantItems  []types.Bytes `json:"items"`
+	} `json:"covenant"`
+}

@@ -12,4 +12,6 @@ var routes = map[string]interface{}{
 	"/lists/bids":      GetTopList,
 	"/names/records":   GetRecordsByName,
 	"/names/auction":   GetAuctionHistoryByName,
+	"/names/reserved":  GetAuctionHistoryByName,
+	"/names/info":      GetAuctionHistoryByName,
 }
