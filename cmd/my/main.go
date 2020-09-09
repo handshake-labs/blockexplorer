@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"github.com/handshake-labs/blockexplorer/pkg/db"
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 	_ "github.com/lib/pq"
@@ -11,6 +12,10 @@ import (
 	"log"
 	"os"
 )
+
+type A struct {
+	Pizda json.RawMessage `json:"pizda"`
+}
 
 func main() {
 	// log.Println("www")
@@ -47,5 +52,10 @@ func main() {
 		log.Println(err)
 	}
 	log.Println(name)
+
+	block := int32(123)
+	// t := A{Pizda: json.RawMessage(`{"block":block}`)}
+	t := A{Pizda: json.RawMessage(block)}
+	log.Println(t)
 
 }

@@ -7,6 +7,11 @@ SELECT *
 FROM blocks
 WHERE height = $1;
 
+-- name: GetBlockByHash :one
+SELECT *
+FROM blocks
+WHERE hash = $1;
+
 -- name: GetBlockHashByHeight :one
 SELECT hash
 FROM blocks
