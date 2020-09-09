@@ -5,11 +5,14 @@ import (
 )
 
 var routes = map[string]interface{}{
-	"/block":           GetBlockByHeight,
-	"/block/txs":       GetTransactionsByBlockHash,
-	"/lists/expensive": GetTopList,
-	"/lists/bids":      GetTopList,
-	"/names/records":   GetRecordsByName,
-	"/names/auction":   GetAuctionHistoryByName,
-	"/search":          Search,
+	"/block":               GetBlockByHeight,
+	"/block/txs":           GetTransactionsByBlockHash,
+	"/lists/expensive":     GetListExpensive,    //the most expensive names
+	"/lists/lockup_volume": GetListLockupVolume, //names with the most auction volume
+	"/lists/reveal_volume": GetListRevealVolume, //names with the most auction volume
+	"/lists/bids":          GetListBids,         //names with the most bids in the auction
+	// "/lists/transfer":      GetListTransfers,    //names with the most transfers made
+	"/names/records": GetRecordsByName,
+	"/names/auction": GetAuctionHistoryByName,
+	"/search":        Search,
 }

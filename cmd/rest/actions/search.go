@@ -7,8 +7,9 @@ import (
 	// "github.com/handshake-labs/blockexplorer/pkg/types"
 	// "github.com/handshake-labs/blockexplorer/pkg/db"
 	// "github.com/jinzhu/copier"
-	// "log"
+	"encoding/json"
 	"golang.org/x/net/idna"
+	"log"
 	"strconv"
 )
 
@@ -18,8 +19,9 @@ type SearchParams struct {
 
 type SearchResult struct {
 	// NameRows []db.NameRow `json:"namerows"`
-	Count int32 `json:"count"`
-	Limit int16 `json:"limit"`
+	// Count int32 `json:"count"`
+	// Limit int16 `json:"limit"`
+	Response json.RawMessage `json:"result"`
 }
 
 func Search(ctx *Context, params *SearchParams) (*SearchResult, error) {
@@ -31,7 +33,8 @@ func Search(ctx *Context, params *SearchParams) (*SearchResult, error) {
 		//check if it's a block hash, if there is a block of such hash, redirect there, otherwsie give a name resulkt
 	}
 
-	if _, err := strconv.Atoi(query); err == nil {
+	if height, err := strconv.Atoi(query); err == nil {
+		log.Println(height)
 		//otherwise check if it's a string of ints, therefore it's a block
 		//propose either the block of given height, or a namestring of the same integer
 		return nil, nil

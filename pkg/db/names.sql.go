@@ -30,7 +30,7 @@ lockup,
 reveal,
 covenant_action,
 covenant_record_data,
-covenant_name_hash
+covenant_name_hash,
 (COUNT(*) OVER())::smallint as count
 FROM auctions
 WHERE covenant_name = $1 
@@ -161,7 +161,7 @@ max_revealed,
 bidcount,
 (COUNT(*) OVER())::bigint as count
 FROM names
-ORDER BY max_lockup DESC 
+ORDER BY max_revealed DESC 
 LIMIT $2::smallint OFFSET $1::smallint;
 `
 
@@ -180,6 +180,180 @@ func (q *Queries) GetMostExpensiveNames(ctx context.Context, params GetMostExpen
 			&i.CovenantName,
 			&i.MaxLockup,
 			&i.MaxRevealed,
+			&i.BidCount,
+			&i.Count,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+type NameVolumeRow struct {
+	OpenHeight       int32
+	CovenantNameHash types.Bytes
+	CovenantName     types.Bytes
+	MaxLockup        int64
+	MaxRevealed      int64
+	VolumeLockup     int64
+	VolumeRevealed   int64
+	BidCount         int16
+	Count            int32
+}
+
+type GetMostLockupVolumeNamesParams struct {
+	Offset int16
+	Limit  int16
+}
+
+const getMostLockupVolumeNames = `-- name: GetMostLockupVolumeNames :many
+SELECT
+open_height,
+covenant_name_hash,
+name,
+max_lockup,
+max_revealed,
+sum_lockup,
+sum_revealed,
+bidcount,
+(COUNT(*) OVER())::bigint as count
+FROM names
+ORDER BY sum_lockup DESC 
+LIMIT $2::smallint OFFSET $1::smallint;
+`
+
+func (q *Queries) GetMostLockupVolumeNames(ctx context.Context, params GetMostLockupVolumeNamesParams) ([]NameVolumeRow, error) {
+	rows, err := q.db.QueryContext(ctx, getMostLockupVolumeNames, params.Offset, params.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []NameVolumeRow{}
+	for rows.Next() {
+		var i NameVolumeRow
+		if err := rows.Scan(
+			&i.OpenHeight,
+			&i.CovenantNameHash,
+			&i.CovenantName,
+			&i.MaxLockup,
+			&i.MaxRevealed,
+			&i.VolumeLockup,
+			&i.VolumeRevealed,
+			&i.BidCount,
+			&i.Count,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+type GetMostRevealVolumeNamesParams struct {
+	Offset int16
+	Limit  int16
+}
+
+const getMostRevealVolumeNames = `-- name: GetMostRevealVolumeNames :many
+SELECT
+open_height,
+covenant_name_hash,
+name,
+max_lockup,
+max_revealed,
+sum_lockup,
+sum_revealed,
+bidcount,
+(COUNT(*) OVER())::bigint as count
+FROM names
+ORDER BY sum_revealed DESC 
+LIMIT $2::smallint OFFSET $1::smallint;
+`
+
+func (q *Queries) GetMostRevealVolumeNames(ctx context.Context, params GetMostRevealVolumeNamesParams) ([]NameVolumeRow, error) {
+	rows, err := q.db.QueryContext(ctx, getMostRevealVolumeNames, params.Offset, params.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []NameVolumeRow{}
+	for rows.Next() {
+		var i NameVolumeRow
+		if err := rows.Scan(
+			&i.OpenHeight,
+			&i.CovenantNameHash,
+			&i.CovenantName,
+			&i.MaxLockup,
+			&i.MaxRevealed,
+			&i.VolumeLockup,
+			&i.VolumeRevealed,
+			&i.BidCount,
+			&i.Count,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+type GetMostBidsNamesParams struct {
+	Offset int16
+	Limit  int16
+}
+
+const getMostBidsNames = `-- name: GetMostBidsNames :many
+SELECT
+open_height,
+covenant_name_hash,
+name,
+max_lockup,
+max_revealed,
+sum_lockup,
+sum_revealed,
+bidcount,
+(COUNT(*) OVER())::bigint as count
+FROM names
+ORDER BY bidcount DESC 
+LIMIT $2::smallint OFFSET $1::smallint;
+`
+
+func (q *Queries) GetMostBidsNames(ctx context.Context, params GetMostBidsNamesParams) ([]NameVolumeRow, error) {
+	rows, err := q.db.QueryContext(ctx, getMostBidsNames, params.Offset, params.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []NameVolumeRow{}
+	for rows.Next() {
+		var i NameVolumeRow
+		if err := rows.Scan(
+			&i.OpenHeight,
+			&i.CovenantNameHash,
+			&i.CovenantName,
+			&i.MaxLockup,
+			&i.MaxRevealed,
+			&i.VolumeLockup,
+			&i.VolumeRevealed,
 			&i.BidCount,
 			&i.Count,
 		); err != nil {
