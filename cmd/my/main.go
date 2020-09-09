@@ -53,9 +53,4 @@ func main() {
 	}
 	log.Println(name)
 
-	block := int32(123)
-	// t := A{Pizda: json.RawMessage(`{"block":block}`)}
-	t := A{Pizda: json.RawMessage(block)}
-	log.Println(t)
-
 }
