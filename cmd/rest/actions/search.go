@@ -2,9 +2,9 @@ package actions
 
 import (
 	"database/sql"
+	"encoding/hex"
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 	"golang.org/x/net/idna"
-	"log"
 	"strconv"
 )
 
@@ -24,22 +24,17 @@ func Search(ctx *Context, params *SearchParams) (*SearchResult, error) {
 	var result SearchResult
 	query := params.Query
 	if len(query) == 64 {
-		//check if it's a transaction hash, if there is such a tx, then redirect there, otherwise give a name result
-		// log.Println("zzzzzz")
-		log.Println(types.Bytes(query))
-		// if t, err := ctx.db.GetTransactionByTxid(ctx, types.Bytes(query)); err != sql.ErrNoRows {
-		t, err := ctx.db.GetTransactionByTxid(ctx, types.Bytes(query))
-		// 	log.Println(t)
-		// 	txs = append(txs, query)
-		// }
-		log.Println(t)
-		log.Println(err)
-		//check if it's a block hash, if there is a block of such hash, redirect there, otherwsie give a name resulkt
-		if block, err3 := ctx.db.GetBlockByHash(ctx, types.Bytes(query)); err3 != sql.ErrNoRows {
-			log.Println(err3)
-			blocks = append(blocks, (block.Height))
+		if hash, err := hex.DecodeString(query); err == nil {
+			hexString := types.Bytes(hash)
+			//check if it's a transaction hash, if there is such a tx, then redirect there, otherwise give a name result
+			if _, err := ctx.db.GetTransactionByTxid(ctx, hexString); err != sql.ErrNoRows {
+				txs = append(txs, query)
+			}
+			//check if it's a block hash, if there is a block of such hash, redirect there, otherwsie give a name resulkt
+			if block, err := ctx.db.GetBlockByHash(ctx, hexString); err != sql.ErrNoRows {
+				blocks = append(blocks, (block.Height))
+			}
 		}
-		// log.Println(block)
 	}
 
 	if height, err := strconv.Atoi(query); err == nil {

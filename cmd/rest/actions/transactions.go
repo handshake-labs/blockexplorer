@@ -4,7 +4,7 @@ import (
 	"github.com/handshake-labs/blockexplorer/pkg/db"
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 	"github.com/jinzhu/copier"
-	// "log"
+	"log"
 )
 
 type GetTransactionsByBlockHashParams struct {
@@ -61,6 +61,7 @@ type GetTransactionByTxidParams struct {
 }
 
 func GetTransactionByTxid(ctx *Context, params *GetTransactionByTxidParams) (*Transaction, error) {
+	log.Println(params.Txid)
 	transaction, err := ctx.db.GetTransactionByTxid(ctx, params.Txid)
 	if err != nil {
 		return nil, err

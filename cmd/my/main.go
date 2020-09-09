@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"github.com/handshake-labs/blockexplorer/pkg/db"
 	"github.com/handshake-labs/blockexplorer/pkg/types"
@@ -34,9 +35,19 @@ func main() {
 
 	x, err2 := q.GetNameRecordHistoryByNameHash(context.Background(), db.GetNameRecordHistoryByNameHashParams{NameHash: types.Bytes(sum)})
 	// x, err2 := q.GetNameRecordHistoryByNameHash(context.Background(), types.Bytes("7d9ed1a61b37b5a103316e2be8b6db155200dc15b7ef65be0031beba890c93e6"))
+	log.Printf("%+v", x)
 	log.Println(err2)
 
-	log.Printf("%+v", x)
+	txid := types.Bytes("19350b99af07048a497018d76a5ff08b36e08454a71c98aa1b11c967ecce9a26")
+	log.Println(txid)
+
+	txid2, _ := hex.DecodeString("19350b99af07048a497018d76a5ff08b36e08454a71c98aa1b11c967ecce9a26")
+	log.Println(types.Bytes(txid2))
+
+	xx, err9 := q.GetTransactionByTxid(context.Background(), txid2)
+	log.Println("wwwwwwwwwwwwwwwwwww")
+	log.Println(xx)
+	log.Println(err9)
 
 	a := types.Bytes("4c7ac3f47d4ba73bb289f06aaf7e672967a165dcfc5fdcb5cf7bec599ba6fff5")
 	b := types.Bytes("zzzzыы")
