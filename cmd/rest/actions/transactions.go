@@ -4,7 +4,7 @@ import (
 	"github.com/handshake-labs/blockexplorer/pkg/db"
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 	"github.com/jinzhu/copier"
-	"log"
+	// "log"
 )
 
 type GetTransactionsByBlockHashParams struct {
@@ -33,7 +33,7 @@ func GetTransactionsByBlockHash(ctx *Context, params *GetTransactionsByBlockHash
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("%+v", transactions[0])
+	// log.Printf("%+v", transactions[0])
 	if len(transactions) == 0 {
 		return &result, nil
 	}
