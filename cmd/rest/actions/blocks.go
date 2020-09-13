@@ -3,7 +3,6 @@ package actions
 import (
 	"database/sql"
 
-	"github.com/handshake-labs/blockexplorer/pkg/types"
 	"github.com/jinzhu/copier"
 )
 
@@ -12,9 +11,8 @@ type GetBlockByHeightParams struct {
 }
 
 type GetBlockByHeightResult struct {
-	Block         Block       `json:"block"`
-	PrevBlockHash types.Bytes `json:"prev_block_hash,omitempty"`
-	NextBlockHash types.Bytes `json:"next_block_hash,omitempty"`
+	Block           Block `json:"block"`
+	BlocksMaxHeight int32 `json:"maxHeight"`
 }
 
 func GetBlockByHeight(ctx *Context, params *GetBlockByHeightParams) (*GetBlockByHeightResult, error) {
@@ -27,14 +25,9 @@ func GetBlockByHeight(ctx *Context, params *GetBlockByHeightParams) (*GetBlockBy
 		return nil, err
 	}
 	copier.Copy(&result.Block, &block)
-	if hash, err := ctx.db.GetBlockHashByHeight(ctx, block.Height-1); err == nil {
-		result.PrevBlockHash = hash
-	} else if err != sql.ErrNoRows {
-		return nil, err
-	}
-	if hash, err := ctx.db.GetBlockHashByHeight(ctx, block.Height+1); err == nil {
-		result.NextBlockHash = hash
-	} else if err != sql.ErrNoRows {
+	if height, err := ctx.db.GetBlocksMaxHeight(ctx); err == nil {
+		result.BlocksMaxHeight = height
+	} else {
 		return nil, err
 	}
 	return &result, nil
