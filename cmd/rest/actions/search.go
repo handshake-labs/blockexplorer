@@ -1,15 +1,10 @@
 package actions
 
 import (
-	// "database/sql"
-	// "context"
-	// "golang.org/x/crypto/sha3"
-	// "github.com/handshake-labs/blockexplorer/pkg/types"
-	// "github.com/handshake-labs/blockexplorer/pkg/db"
-	// "github.com/jinzhu/copier"
-	"encoding/json"
+	"database/sql"
+	"encoding/hex"
+	"github.com/handshake-labs/blockexplorer/pkg/types"
 	"golang.org/x/net/idna"
-	"log"
 	"strconv"
 )
 
@@ -18,33 +13,41 @@ type SearchParams struct {
 }
 
 type SearchResult struct {
-	// NameRows []db.NameRow `json:"namerows"`
-	// Count int32 `json:"count"`
-	// Limit int16 `json:"limit"`
-	Response json.RawMessage `json:"result"`
+	Transactions []string `json:"transactions"`
+	Blocks       []int32  `json:"blocks"`
+	Names        []string `json:"names"`
 }
 
 func Search(ctx *Context, params *SearchParams) (*SearchResult, error) {
-
-	//QUERY IS A HASH
+	var txs, names []string
+	var blocks []int32
+	var result SearchResult
 	query := params.Query
 	if len(query) == 64 {
-		//check if it's a transaction hash, if there is such a tx, then redirect there, otherwise give a name result
-		//check if it's a block hash, if there is a block of such hash, redirect there, otherwsie give a name resulkt
+		if hash, err := hex.DecodeString(query); err == nil {
+			hexString := types.Bytes(hash)
+			//check if it's a transaction hash, if there is such a tx, then redirect there, otherwise give a name result
+			if _, err := ctx.db.GetTransactionByTxid(ctx, hexString); err != sql.ErrNoRows {
+				txs = append(txs, query)
+			}
+			//check if it's a block hash, if there is a block of such hash, redirect there, otherwsie give a name resulkt
+			if block, err := ctx.db.GetBlockByHash(ctx, hexString); err != sql.ErrNoRows {
+				blocks = append(blocks, (block.Height))
+			}
+		}
 	}
 
 	if height, err := strconv.Atoi(query); err == nil {
-		log.Println(height)
 		//otherwise check if it's a string of ints, therefore it's a block
-		//propose either the block of given height, or a namestring of the same integer
-		return nil, nil
+		blocks = append(blocks, int32(height))
 	}
 
-	_, err := idna.ToASCII(query)
-	if err != nil {
-		return nil, nil
-		// log.Println(err)
+	punycoded_name, err := idna.ToASCII(query)
+	if err == nil {
+		names = append(names, string(punycoded_name))
 	}
-
-	return nil, nil
+	result.Blocks = blocks
+	result.Transactions = txs
+	result.Names = names
+	return &result, nil
 }

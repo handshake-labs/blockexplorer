@@ -19,6 +19,37 @@ func (q *Queries) DeleteBlocksAfterHeight(ctx context.Context, height int32) err
 	return err
 }
 
+const getBlockByHash = `-- name: GetBlockByHash :one
+SELECT hash, height, weight, size, version, hash_merkle_root, witness_root, tree_root, reserved_root, mask, time, bits, difficulty, chainwork, nonce, extra_nonce, orphan
+FROM blocks
+WHERE hash = $1
+`
+
+func (q *Queries) GetBlockByHash(ctx context.Context, hash types.Bytes) (Block, error) {
+	row := q.db.QueryRowContext(ctx, getBlockByHash, hash)
+	var i Block
+	err := row.Scan(
+		&i.Hash,
+		&i.Height,
+		&i.Weight,
+		&i.Size,
+		&i.Version,
+		&i.HashMerkleRoot,
+		&i.WitnessRoot,
+		&i.TreeRoot,
+		&i.ReservedRoot,
+		&i.Mask,
+		&i.Time,
+		&i.Bits,
+		&i.Difficulty,
+		&i.Chainwork,
+		&i.Nonce,
+		&i.ExtraNonce,
+		&i.Orphan,
+	)
+	return i, err
+}
+
 const getBlockByHeight = `-- name: GetBlockByHeight :one
 SELECT hash, height, weight, size, version, hash_merkle_root, witness_root, tree_root, reserved_root, mask, time, bits, difficulty, chainwork, nonce, extra_nonce, orphan
 FROM blocks

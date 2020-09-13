@@ -3,7 +3,6 @@
 package node
 
 import "github.com/handshake-labs/blockexplorer/pkg/types"
-// import "log"
 
 type Block struct {
 	Hash           types.Bytes   `json:"hash"`
@@ -47,11 +46,11 @@ type TxInput struct {
 }
 
 type TxOutput struct {
-	Index   int32 `json:"n"`
-	Value    types.Money    `json:"value"`
-  MyAddress struct { // to prevent conflict with method of the same name
-    String string `json:"string"` 
-  } `json:"address"`
+	Index     int32       `json:"n"`
+	Value     types.Money `json:"value"`
+	MyAddress struct {    // to prevent conflict with method of the same name
+		String string `json:"string"`
+	} `json:"address"`
 	Covenant struct {
 		CovenantAction string        `json:"action"`
 		CovenantItems  []types.Bytes `json:"items"`
@@ -59,6 +58,24 @@ type TxOutput struct {
 }
 
 func (txOutput *TxOutput) Address() string {
-  // log.Printf("%+v", txOutput)
 	return txOutput.MyAddress.String
+}
+
+type MempoolTx struct {
+	Txid      types.Bytes       `json:"hash"`
+	WitnessTx types.Bytes       `json:"witnessHash"`
+	Mtime     int64             `json:"mtime"`
+	Version   int32             `json:"version"`
+	Locktime  int32             `json:"locktime"`
+	TxInputs  []TxInput         `json:"inputs"`
+	TxOutputs []MempoolTxOutput `json:"outputs"`
+}
+
+type MempoolTxOutput struct {
+	Value    types.Money `json:"value"`
+	Address  string      `json:"address"`
+	Covenant struct {
+		CovenantAction string        `json:"action"`
+		CovenantItems  []types.Bytes `json:"items"`
+	} `json:"covenant"`
 }

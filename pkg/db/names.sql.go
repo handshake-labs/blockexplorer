@@ -30,7 +30,11 @@ lockup,
 reveal,
 covenant_action,
 covenant_record_data,
+<<<<<<< HEAD
 covenant_name_hash,
+=======
+covenant_name_hash
+>>>>>>> mess
 (COUNT(*) OVER())::smallint as count
 FROM auctions
 WHERE covenant_name = $1 
