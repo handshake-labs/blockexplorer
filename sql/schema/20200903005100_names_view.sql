@@ -5,13 +5,9 @@ max(blocks.height) AS open_height,
 bids.covenant_name_hash,
 bids.covenant_name AS name,
 max(lockups.value) AS max_lockup,
-<<<<<<< HEAD
 sum(lockups.value) AS sum_lockup,
 max(reveals.value) AS max_revealed,
 sum(reveals.value) AS sum_revealed,
-=======
-max(reveals.value) AS max_revealed,
->>>>>>> mess
 count(distinct(reveals.txid, reveals.index)) AS bidcount
 FROM transactions, blocks, tx_outputs lockups, tx_outputs opens, tx_outputs reveals LEFT OUTER JOIN
 tx_outputs bids ON (bids.covenant_name_hash = reveals.covenant_name_hash) WHERE

@@ -10,17 +10,25 @@ import (
 )
 
 const getTransactionByTxid = `-- name: GetTransactionByTxid :one
-SELECT
-    txid, witness_tx, fee, rate, block_hash, index, version, locktime, size
-FROM
-    transactions
-WHERE
-    txid = $1
+SELECT transactions.txid, transactions.witness_tx, transactions.fee, transactions.rate, transactions.block_hash, transactions.index, transactions.version, transactions.locktime, transactions.size, blocks.height FROM transactions, blocks WHERE transactions.block_hash=blocks.hash AND transactions.txid = $1
 `
 
-func (q *Queries) GetTransactionByTxid(ctx context.Context, txid types.Bytes) (Transaction, error) {
+type GetTransactionByTxidRow struct {
+	Txid      types.Bytes
+	WitnessTx types.Bytes
+	Fee       int64
+	Rate      int64
+	BlockHash types.Bytes
+	Index     int32
+	Version   int32
+	Locktime  int32
+	Size      int64
+	Height    int32
+}
+
+func (q *Queries) GetTransactionByTxid(ctx context.Context, txid types.Bytes) (GetTransactionByTxidRow, error) {
 	row := q.db.QueryRowContext(ctx, getTransactionByTxid, txid)
-	var i Transaction
+	var i GetTransactionByTxidRow
 	err := row.Scan(
 		&i.Txid,
 		&i.WitnessTx,
@@ -31,6 +39,7 @@ func (q *Queries) GetTransactionByTxid(ctx context.Context, txid types.Bytes) (T
 		&i.Version,
 		&i.Locktime,
 		&i.Size,
+		&i.Height,
 	)
 	return i, err
 }

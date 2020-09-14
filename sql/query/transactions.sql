@@ -4,13 +4,7 @@ INSERT INTO transactions (txid, witness_tx, fee, rate, block_hash, index, "versi
 
 
 -- name: GetTransactionByTxid :one
-SELECT
-    *
-FROM
-    transactions
-WHERE
-    txid = $1;
-
+SELECT transactions.*, blocks.height FROM transactions, blocks WHERE transactions.block_hash=blocks.hash AND transactions.txid = $1;
 
 -- name: GetTransactionsByBlockHash :many
 SELECT *, (COUNT(*) OVER())::smallint as count

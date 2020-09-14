@@ -28,7 +28,7 @@ func main() {
 			go2ts.Property{path, atid, false},
 		)
 	}
-	converter.RegisterDescWithName(&go2ts.Record{rprops}, "Routes")
+	converter.RegisterDescWithName(&go2ts.Record{rprops}, "API")
 
 	converter.Render()
 }

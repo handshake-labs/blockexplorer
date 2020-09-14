@@ -34,6 +34,7 @@ type Transaction struct {
 	Version   int32       `json:"version"`
 	Locktime  int32       `json:"locktime"`
 	Size      int64       `json:"size"`
+	Height    int64       `json:"height"`
 	TxInputs  []TxInput   `json:"inputs"`
 	TxOutputs []TxOutput  `json:"outputs"`
 }
