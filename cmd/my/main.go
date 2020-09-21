@@ -3,20 +3,17 @@ package main
 import (
 	"context"
 	"database/sql"
-	"encoding/hex"
-	"encoding/json"
+	// "encoding/hex"
+	// "encoding/json"
 	"github.com/handshake-labs/blockexplorer/pkg/db"
 	"github.com/handshake-labs/blockexplorer/pkg/types"
+	// "github.com/handshake-labs/blockexplorer/rest/actions"
 	_ "github.com/lib/pq"
 	"golang.org/x/crypto/sha3"
-	"golang.org/x/net/idna"
+	// "golang.org/x/net/idna"
 	"log"
 	"os"
 )
-
-type A struct {
-	Pizda json.RawMessage `json:"pizda"`
-}
 
 func main() {
 	// log.Println("www")
@@ -30,38 +27,32 @@ func main() {
 
 	sha := sha3.New256()
 	sha.Write([]byte("js"))
-	sum := sha.Sum(nil)
+	// sum := sha.Sum(nil)
 	// log.Print(sum)
+	rr, err99 := q.GetAuctionHistoryByName(context.Background(), db.GetAuctionHistoryByNameParams{Name: "ximik", Offset: 0, Limit: 50})
+	log.Println(rr)
+	log.Println(err99)
 
-	x, err2 := q.GetNameRecordHistoryByNameHash(context.Background(), db.GetNameRecordHistoryByNameHashParams{NameHash: types.Bytes(sum)})
-	// x, err2 := q.GetNameRecordHistoryByNameHash(context.Background(), types.Bytes("7d9ed1a61b37b5a103316e2be8b6db155200dc15b7ef65be0031beba890c93e6"))
-	log.Printf("%+v", x)
-	log.Println(err2)
+	check, err0 := q.CheckReservedName(context.Background(), types.Bytes("ximik"))
+	if err0 == sql.ErrNoRows {
+		log.Printf("yoyoy")
 
-	txid := types.Bytes("19350b99af07048a497018d76a5ff08b36e08454a71c98aa1b11c967ecce9a26")
-	log.Println(txid)
-
-	txid2, _ := hex.DecodeString("19350b99af07048a497018d76a5ff08b36e08454a71c98aa1b11c967ecce9a26")
-	log.Println(types.Bytes(txid2))
-
-	xx, err9 := q.GetTransactionByTxid(context.Background(), txid2)
-	log.Println("wwwwwwwwwwwwwwwwwww")
-	log.Println(xx)
-	log.Println(err9)
-
-	a := types.Bytes("4c7ac3f47d4ba73bb289f06aaf7e672967a165dcfc5fdcb5cf7bec599ba6fff5")
-	b := types.Bytes("zzzzыы")
-	c := "zcxvы"
-	log.Println(a)
-	log.Println(len(a))
-	log.Println(b)
-	log.Println(len(b))
-	log.Println(c)
-	log.Println(len(c))
-	name, err := idna.ToASCII(c)
-	if err != nil {
-		log.Println(err)
 	}
-	log.Println(name)
+	log.Printf("%+v", check)
 
+	// a := types.Bytes("4c7ac3f47d4ba73bb289f06aaf7e672967a165dcfc5fdcb5cf7bec599ba6fff5")
+	// b := types.Bytes("zzzzыы")
+	// c := "zcxvы"
+	// log.Println(a)
+	// log.Println(len(a))
+	// log.Println(b)
+	// log.Println(len(b))
+	// log.Println(c)
+	// log.Println(len(c))
+	// name, err := idna.ToASCII(c)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// log.Println(name)
+	//
 }

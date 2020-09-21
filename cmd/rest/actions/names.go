@@ -3,9 +3,9 @@ package actions
 import (
 	"database/sql"
 
-	"golang.org/x/crypto/sha3"
-	// "github.com/handshake-labs/blockexplorer/pkg/types"
 	"github.com/handshake-labs/blockexplorer/pkg/db"
+	"github.com/handshake-labs/blockexplorer/pkg/types"
+	"golang.org/x/crypto/sha3"
 	// "log"
 )
 
@@ -273,49 +273,61 @@ func GetRecordsByName(ctx *Context, params *GetRecordsParams) (*GetRecordsParams
 	return &result, nil
 }
 
-// type GetNameInfoParams struct {
-// 	Name string `json:"name"`
-// 	// Page int16  `json:"page"`
-// }
-//
-// type GetNameInfoParamsResult struct {
-// 	Records []db.RecordRow `json:"records"`
-// 	Count   int16          `json:"count"`
-// 	Limit   int16          `json:"limit"`
-// }
-//
-// func GetNameInfoByName(ctx *Context, params *GetNameInfoParams) (*GetNameInfoParamsResult, error) {
-// 	// sha := sha3.New256()
-// 	// sha.Write([]byte(params.Name))
-// 	// nameHash := sha.Sum(nil)
-// 	//
-// 	// result := GetNameInfoParamsResult{}
-// 	//
-// 	// result.Limit = 50
-// 	// var page int16 = params.Page
-// 	// if page < 0 {
-// 	// 	page = 0
-// 	// }
-// 	//
-// 	res, err := ctx.db.CheckReservedName(ctx, types.Bytes(params.Name))
-// 	if err == sql.ErrNoRows {
-//
-// 	}
-//
-// 	recordRows, err := ctx.db.GetNameRecordHistoryByNameHash(ctx, db.GetNameRecordHistoryByNameHashParams{
-// 		NameHash: nameHash,
-// 		Limit:    result.Limit,
-// 		Offset:   page * result.Limit,
-// 	})
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return nil, nil
-// 		}
-// 		return nil, err
-// 	}
-// 	result.Records = recordRows
-// 	// result.Count = int16(len(recordRows))
-// 	result.Count = recordRows[0].Count
-// 	result.Limit = 50
-// 	return &result, nil
-// }
+type GetNameInfoParams struct {
+	Name string `json:"name"`
+	Page int16  `json:"page"`
+}
+
+type GetNameInfoResult struct {
+	Reserved    bool            `json:"reserved"`
+	Reservation db.ReservedName `json:"reservation"`
+	Records     []db.RecordRow  `json:"records"`
+	Count       int16           `json:"count"`
+	Limit       int16           `json:"limit"`
+}
+
+func GetNameInfo(ctx *Context, params *GetNameInfoParams) (*GetNameInfoResult, error) {
+	sha := sha3.New256()
+	sha.Write([]byte(params.Name))
+	nameHash := sha.Sum(nil)
+
+	result := GetNameInfoResult{}
+
+	result.Limit = 50
+	var page int16 = params.Page
+	if page < 0 {
+		page = 0
+	}
+
+	var reserved bool
+
+	reservation, err := ctx.db.CheckReservedName(ctx, types.Bytes(params.Name))
+	if err == sql.ErrNoRows {
+		reserved = false
+	} else {
+		reserved = true
+	}
+
+	result.Reserved = reserved
+	result.Reservation = reservation
+
+	recordRows, err := ctx.db.GetNameRecordHistoryByNameHash(ctx, db.GetNameRecordHistoryByNameHashParams{
+		NameHash: nameHash,
+		Limit:    result.Limit,
+		Offset:   page * result.Limit,
+	})
+
+	// log.Println(err)
+
+	// if err != nil {
+	// 	if err == sql.ErrNoRows {
+	// 		return nil, nil
+	// 	}
+	// 	return nil, err
+	// }
+	result.Records = recordRows
+	result.Count = int16(len(recordRows))
+	// result.Count = recordRows[0].Count
+	result.Limit = 50
+	return &result, nil
+}
