@@ -1,5 +1,5 @@
 -- name: GetTxOutputsByTxid :many
-SELECT * FROM tx_outputs WHERE "txid" = $1
+SELECT tx_outputs.*, namehash.covenant_name FROM tx_outputs, namehash WHERE tx_outputs.covenant_name_hash = namehash.covenant_name_hash AND tx_outputs.txid = $1
 ORDER BY index;
 
 -- name: InsertTxOutput :exec

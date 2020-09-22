@@ -10,7 +10,7 @@ import (
 )
 
 const getTxOutputsByTxid = `-- name: GetTxOutputsByTxid :many
-SELECT txid, index, value, block_hash, address, covenant_action, covenant_name_hash, covenant_height, covenant_name, covenant_bid_hash, covenant_nonce, covenant_record_data, covenant_block_hash, covenant_version, covenant_address, covenant_claim_height, covenant_renewal_count FROM tx_outputs WHERE "txid" = $1
+SELECT txid, index, value, block_hash, address, covenant_action, tx_outputs.covenant_name_hash, covenant_height, tx_outputs.covenant_name, covenant_bid_hash, covenant_nonce, covenant_record_data, covenant_block_hash, covenant_version, covenant_address, covenant_claim_height, covenant_renewal_count, namehash.covenant_name as name FROM tx_outputs LEFT JOIN namehash ON tx_outputs.covenant_name_hash = namehash.covenant_name_hash WHERE "txid" = $1
 ORDER BY index
 `
 
@@ -41,6 +41,7 @@ func (q *Queries) GetTxOutputsByTxid(ctx context.Context, txid types.Bytes) ([]T
 			&i.CovenantAddress,
 			&i.CovenantClaimHeight,
 			&i.CovenantRenewalCount,
+			&i.Name,
 		); err != nil {
 			return nil, err
 		}

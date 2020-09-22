@@ -6,7 +6,6 @@ import (
 	"github.com/handshake-labs/blockexplorer/pkg/db"
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 	"golang.org/x/crypto/sha3"
-	// "log"
 )
 
 type GetListExpensiveParams struct {
