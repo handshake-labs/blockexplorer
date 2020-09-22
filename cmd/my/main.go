@@ -47,10 +47,13 @@ func main() {
 	log.Println(aa)
 	log.Println(err101)
 
-	a := types.Bytes("4c7ac3f47d4ba73bb289f06aaf7e672967a165dcfc5fdcb5cf7bec599ba6fff5")
-	// b := types.Bytes("zzzzыы")
-	// c := "zcxvы"
-	log.Println(a)
+	namehash, _ := hex.DecodeString("0002e258f7e171410ad572139df53d6c45e9e855c6f148592d78d7b9050225e9")
+	log.Println(namehash)
+	pizda, adz := q.GetNameByNameHash(context.Background(), types.Bytes(namehash))
+
+	log.Println(adz)
+	log.Println(pizda)
+
 	// log.Println(len(a))
 	// log.Println(b)
 	// log.Println(len(b))

@@ -369,3 +369,16 @@ func (q *Queries) GetMostBidsNames(ctx context.Context, params GetMostBidsNamesP
 	}
 	return items, nil
 }
+
+const getNameByNameHash = `-- name: GetNameByNameHash :one
+SELECT covenant_name from namehash where covenant_name_hash = $1; 
+`
+
+func (q *Queries) GetNameByNameHash(ctx context.Context, nameHash types.Bytes) (string, error) {
+	row := q.db.QueryRowContext(ctx, getNameByNameHash, nameHash)
+	var i string
+	err := row.Scan(
+		&i,
+	)
+	return i, err
+}

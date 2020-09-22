@@ -82,12 +82,10 @@ func syncBlock(pg *sql.DB, block *node.Block) error {
 		return err
 	}
 	for tx_index, transaction := range block.Transactions {
-		// log.Printf("%+v", transaction)
 		transactionParams := db.InsertTransactionParams{}
 		transactionParams.BlockHash = blockParams.Hash
 		transactionParams.Index = int32(tx_index)
 		copier.Copy(&transactionParams, &transaction)
-		// log.Println(transactionParams)
 		if err = q.InsertTransaction(context.Background(), transactionParams); err != nil {
 			return err
 		}
@@ -103,7 +101,6 @@ func syncBlock(pg *sql.DB, block *node.Block) error {
 		}
 		for _, txOutput := range transaction.TxOutputs {
 			txOutputParams := db.InsertTxOutputParams{}
-			// log.Printf("%+v", txOutput)
 			txOutputParams.Txid = transactionParams.Txid
 			txOutputParams.BlockHash = blockParams.Hash
 			txOutputParams.CovenantAction = db.CovenantAction(txOutput.Covenant.CovenantAction)
@@ -160,7 +157,7 @@ func syncBlock(pg *sql.DB, block *node.Block) error {
 				txOutputParams.CovenantNameHash = &covenantItems[0]
 				txOutputParams.CovenantHeight = &covenantItems[1]
 			default:
-				return errors.New("unknown covenant action")
+				return errors.New("Unknown covenant action")
 			}
 			if err := q.InsertTxOutput(context.Background(), txOutputParams); err != nil {
 				return err

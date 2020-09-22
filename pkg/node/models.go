@@ -67,8 +67,18 @@ type MempoolTx struct {
 	Mtime     int64             `json:"mtime"`
 	Version   int32             `json:"version"`
 	Locktime  int32             `json:"locktime"`
-	TxInputs  []TxInput         `json:"inputs"`
+	TxInputs  []MempoolTxInput  `json:"inputs"`
 	TxOutputs []MempoolTxOutput `json:"outputs"`
+}
+
+type MempoolTxInput struct {
+	Prevout struct {
+		Hash  types.Bytes `json:"hash"`
+		Index int64       `json:"index"`
+	} `json:"prevout"`
+	Witness  []types.Bytes `json:"witness"`
+	Sequence int64         `json:"sequence"`
+	Address  string        `json:"address"`
 }
 
 type MempoolTxOutput struct {
