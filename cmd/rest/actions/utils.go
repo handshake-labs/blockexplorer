@@ -28,6 +28,9 @@ func paramIntoValue(p string, v reflect.Value) error {
 		return nil
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		n, err := strconv.ParseInt(p, 10, v.Type().Bits())
+		if n < 0 {
+			return errors.New("negative value")
+		}
 		v.SetInt(n)
 		return err
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:

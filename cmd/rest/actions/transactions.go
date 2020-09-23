@@ -1,42 +1,33 @@
 package actions
 
 import (
+	"log"
+
 	"github.com/handshake-labs/blockexplorer/pkg/db"
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 	"github.com/jinzhu/copier"
-	"log"
 )
 
 type GetTransactionsByBlockHashParams struct {
 	BlockHash types.Bytes `json:"hash"`
-	Page      int16       `json:"page"`
+	Limit     int8        `json:"limit"`
+	Offset    int32       `json:"offset"`
 }
 
 type GetTransactionsByBlockHashResult struct {
 	Transactions []Transaction `json:"txs"`
-	Count        int16         `json:"count"`
-	Limit        int16         `json:"limit"`
 }
 
 func GetTransactionsByBlockHash(ctx *Context, params *GetTransactionsByBlockHashParams) (*GetTransactionsByBlockHashResult, error) {
-	result := GetTransactionsByBlockHashResult{}
-	result.Limit = 50
-	var page int16 = params.Page
-	if page < 0 {
-		page = 0
-	}
 	transactions, err := ctx.db.GetTransactionsByBlockHash(ctx, db.GetTransactionsByBlockHashParams{
 		BlockHash: params.BlockHash,
-		Limit:     result.Limit,
-		Offset:    page * result.Limit,
+		Limit:     int32(params.Limit),
+		Offset:    params.Offset,
 	})
 	if err != nil {
 		return nil, err
 	}
-	if len(transactions) == 0 {
-		return &result, nil
-	}
-	result.Count = transactions[0].Count
+	result := GetTransactionsByBlockHashResult{}
 	for _, transaction := range transactions {
 		txInputs, err := ctx.db.GetTxInputsByTxid(ctx, transaction.Txid)
 		if err != nil {

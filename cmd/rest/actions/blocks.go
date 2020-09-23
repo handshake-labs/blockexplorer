@@ -3,32 +3,32 @@ package actions
 import (
 	"database/sql"
 
+	"github.com/handshake-labs/blockexplorer/pkg/types"
 	"github.com/jinzhu/copier"
 )
 
-type GetBlockByHeightParams struct {
-	Height int32 `json:"height"`
+type GetBlockByHashParams struct {
+	Hash types.Bytes `json:"hash"`
 }
 
-type GetBlockByHeightResult struct {
-	Block           Block `json:"block"`
-	BlocksMaxHeight int32 `json:"maxHeight"`
+type GetBlockByHashResult struct {
+	Block             Block `json:"block"`
+	TransactionsCount int32 `json:"txs_count"`
 }
 
-func GetBlockByHeight(ctx *Context, params *GetBlockByHeightParams) (*GetBlockByHeightResult, error) {
-	result := GetBlockByHeightResult{}
-	block, err := ctx.db.GetBlockByHeight(ctx, params.Height)
+func GetBlockByHash(ctx *Context, params *GetBlockByHashParams) (*GetBlockByHashResult, error) {
+	block, err := ctx.db.GetBlockByHash(ctx, params.Hash)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, err
 	}
-	copier.Copy(&result.Block, &block)
-	if height, err := ctx.db.GetBlocksMaxHeight(ctx); err == nil {
-		result.BlocksMaxHeight = height
-	} else {
+	transactionsCount, err := ctx.db.CountTransactionsByBlockHash(ctx, params.Hash)
+	if err != nil {
 		return nil, err
 	}
+	result := GetBlockByHashResult{Block{}, transactionsCount}
+	copier.Copy(&result.Block, &block)
 	return &result, nil
 }

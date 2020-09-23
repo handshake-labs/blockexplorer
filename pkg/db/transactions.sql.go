@@ -9,6 +9,19 @@ import (
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 )
 
+const countTransactionsByBlockHash = `-- name: CountTransactionsByBlockHash :one
+SELECT COUNT(*)::integer
+FROM transactions
+WHERE block_hash = $1
+`
+
+func (q *Queries) CountTransactionsByBlockHash(ctx context.Context, blockHash types.Bytes) (int32, error) {
+	row := q.db.QueryRowContext(ctx, countTransactionsByBlockHash, blockHash)
+	var column_1 int32
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const getTransactionByTxid = `-- name: GetTransactionByTxid :one
 SELECT transactions.txid, transactions.witness_tx, transactions.fee, transactions.rate, transactions.block_hash, transactions.index, transactions.version, transactions.locktime, transactions.size, blocks.height FROM transactions, blocks WHERE transactions.block_hash=blocks.hash AND transactions.txid = $1
 `
@@ -45,41 +58,28 @@ func (q *Queries) GetTransactionByTxid(ctx context.Context, txid types.Bytes) (G
 }
 
 const getTransactionsByBlockHash = `-- name: GetTransactionsByBlockHash :many
-SELECT txid, witness_tx, fee, rate, block_hash, index, version, locktime, size, (COUNT(*) OVER())::smallint as count
+SELECT txid, witness_tx, fee, rate, block_hash, index, version, locktime, size
 FROM transactions
-WHERE block_hash = $1::bytea
+WHERE block_hash = $1
 ORDER BY index
-LIMIT $3::smallint OFFSET $2::smallint
+LIMIT $2 OFFSET $3
 `
 
 type GetTransactionsByBlockHashParams struct {
 	BlockHash types.Bytes
-	Offset    int16
-	Limit     int16
+	Limit     int32
+	Offset    int32
 }
 
-type GetTransactionsByBlockHashRow struct {
-	Txid      types.Bytes
-	WitnessTx types.Bytes
-	Fee       int64
-	Rate      int64
-	BlockHash types.Bytes
-	Index     int32
-	Version   int32
-	Locktime  int32
-	Size      int64
-	Count     int16
-}
-
-func (q *Queries) GetTransactionsByBlockHash(ctx context.Context, arg GetTransactionsByBlockHashParams) ([]GetTransactionsByBlockHashRow, error) {
-	rows, err := q.db.QueryContext(ctx, getTransactionsByBlockHash, arg.BlockHash, arg.Offset, arg.Limit)
+func (q *Queries) GetTransactionsByBlockHash(ctx context.Context, arg GetTransactionsByBlockHashParams) ([]Transaction, error) {
+	rows, err := q.db.QueryContext(ctx, getTransactionsByBlockHash, arg.BlockHash, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []GetTransactionsByBlockHashRow{}
+	items := []Transaction{}
 	for rows.Next() {
-		var i GetTransactionsByBlockHashRow
+		var i Transaction
 		if err := rows.Scan(
 			&i.Txid,
 			&i.WitnessTx,
@@ -90,7 +90,6 @@ func (q *Queries) GetTransactionsByBlockHash(ctx context.Context, arg GetTransac
 			&i.Version,
 			&i.Locktime,
 			&i.Size,
-			&i.Count,
 		); err != nil {
 			return nil, err
 		}
