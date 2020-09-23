@@ -9,9 +9,9 @@ import (
 )
 
 type GetTransactionsByBlockHashParams struct {
-	BlockHash *types.Bytes `json:"hash"`
-	Limit     int8         `json:"limit"`
-	Offset    int32        `json:"offset"`
+	BlockHash types.Bytes `json:"hash"`
+	Limit     int8        `json:"limit"`
+	Offset    int32       `json:"offset"`
 }
 
 type GetTransactionsByBlockHashResult struct {
@@ -20,7 +20,7 @@ type GetTransactionsByBlockHashResult struct {
 
 func GetTransactionsByBlockHash(ctx *Context, params *GetTransactionsByBlockHashParams) (*GetTransactionsByBlockHashResult, error) {
 	transactions, err := ctx.db.GetTransactionsByBlockHash(ctx, db.GetTransactionsByBlockHashParams{
-		BlockHash: params.BlockHash,
+		BlockHash: &params.BlockHash,
 		Limit:     int32(params.Limit),
 		Offset:    params.Offset,
 	})
