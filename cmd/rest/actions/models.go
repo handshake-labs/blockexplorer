@@ -24,6 +24,7 @@ type Block struct {
 	Chainwork      types.Bytes `json:"chainwork"`
 	Nonce          int64       `json:"nonce"`
 	ExtraNonce     types.Bytes `json:"extraNonce"`
+	TxsCount       int32       `json:"txsCount"`
 }
 
 type Transaction struct {

@@ -5,6 +5,7 @@ import (
 )
 
 var routes = map[string]interface{}{
+	"/blocks":              GetBlocks,
 	"/block":               GetBlockByHash,
 	"/block/txs":           GetTransactionsByBlockHash,
 	"/lists/expensive":     GetListExpensive,    //the most expensive names

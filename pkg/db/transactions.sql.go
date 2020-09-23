@@ -9,19 +9,6 @@ import (
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 )
 
-const countTransactionsByBlockHash = `-- name: CountTransactionsByBlockHash :one
-SELECT COUNT(*)::integer
-FROM transactions
-WHERE block_hash = $1
-`
-
-func (q *Queries) CountTransactionsByBlockHash(ctx context.Context, blockHash types.Bytes) (int32, error) {
-	row := q.db.QueryRowContext(ctx, countTransactionsByBlockHash, blockHash)
-	var column_1 int32
-	err := row.Scan(&column_1)
-	return column_1, err
-}
-
 const getTransactionByTxid = `-- name: GetTransactionByTxid :one
 SELECT transactions.txid, transactions.witness_tx, transactions.fee, transactions.rate, transactions.block_hash, transactions.index, transactions.version, transactions.locktime, transactions.size, blocks.height FROM transactions, blocks WHERE transactions.block_hash=blocks.hash AND transactions.txid = $1
 `

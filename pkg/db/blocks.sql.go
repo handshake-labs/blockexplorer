@@ -20,45 +20,39 @@ func (q *Queries) DeleteBlocksAfterHeight(ctx context.Context, height int32) err
 }
 
 const getBlockByHash = `-- name: GetBlockByHash :one
-SELECT hash, height, weight, size, version, hash_merkle_root, witness_root, tree_root, reserved_root, mask, time, bits, difficulty, chainwork, nonce, extra_nonce, orphan
+SELECT hash, height, weight, size, version, hash_merkle_root, witness_root, tree_root, reserved_root, mask, time, bits, difficulty, chainwork, nonce, extra_nonce, orphan, (
+  SELECT COUNT(*)
+  FROM transactions
+  WHERE block_hash = blocks.hash
+)::integer AS txs_count
 FROM blocks
 WHERE hash = $1
 `
 
-func (q *Queries) GetBlockByHash(ctx context.Context, hash types.Bytes) (Block, error) {
-	row := q.db.QueryRowContext(ctx, getBlockByHash, hash)
-	var i Block
-	err := row.Scan(
-		&i.Hash,
-		&i.Height,
-		&i.Weight,
-		&i.Size,
-		&i.Version,
-		&i.HashMerkleRoot,
-		&i.WitnessRoot,
-		&i.TreeRoot,
-		&i.ReservedRoot,
-		&i.Mask,
-		&i.Time,
-		&i.Bits,
-		&i.Difficulty,
-		&i.Chainwork,
-		&i.Nonce,
-		&i.ExtraNonce,
-		&i.Orphan,
-	)
-	return i, err
+type GetBlockByHashRow struct {
+	Hash           types.Bytes
+	Height         int32
+	Weight         int32
+	Size           int64
+	Version        int32
+	HashMerkleRoot types.Bytes
+	WitnessRoot    types.Bytes
+	TreeRoot       types.Bytes
+	ReservedRoot   types.Bytes
+	Mask           types.Bytes
+	Time           int32
+	Bits           types.Bytes
+	Difficulty     float64
+	Chainwork      types.Bytes
+	Nonce          int64
+	ExtraNonce     types.Bytes
+	Orphan         bool
+	TxsCount       int32
 }
 
-const getBlockByHeight = `-- name: GetBlockByHeight :one
-SELECT hash, height, weight, size, version, hash_merkle_root, witness_root, tree_root, reserved_root, mask, time, bits, difficulty, chainwork, nonce, extra_nonce, orphan
-FROM blocks
-WHERE height = $1
-`
-
-func (q *Queries) GetBlockByHeight(ctx context.Context, height int32) (Block, error) {
-	row := q.db.QueryRowContext(ctx, getBlockByHeight, height)
-	var i Block
+func (q *Queries) GetBlockByHash(ctx context.Context, hash types.Bytes) (GetBlockByHashRow, error) {
+	row := q.db.QueryRowContext(ctx, getBlockByHash, hash)
+	var i GetBlockByHashRow
 	err := row.Scan(
 		&i.Hash,
 		&i.Height,
@@ -77,6 +71,7 @@ func (q *Queries) GetBlockByHeight(ctx context.Context, height int32) (Block, er
 		&i.Nonce,
 		&i.ExtraNonce,
 		&i.Orphan,
+		&i.TxsCount,
 	)
 	return i, err
 }
@@ -92,6 +87,85 @@ func (q *Queries) GetBlockHashByHeight(ctx context.Context, height int32) (types
 	var hash types.Bytes
 	err := row.Scan(&hash)
 	return hash, err
+}
+
+const getBlocks = `-- name: GetBlocks :many
+SELECT hash, height, weight, size, version, hash_merkle_root, witness_root, tree_root, reserved_root, mask, time, bits, difficulty, chainwork, nonce, extra_nonce, orphan, (
+  SELECT COUNT(*)
+  FROM transactions
+  WHERE block_hash = blocks.hash
+)::integer AS txs_count
+FROM blocks
+ORDER BY height DESC
+LIMIT $1 OFFSET $2
+`
+
+type GetBlocksParams struct {
+	Limit  int32
+	Offset int32
+}
+
+type GetBlocksRow struct {
+	Hash           types.Bytes
+	Height         int32
+	Weight         int32
+	Size           int64
+	Version        int32
+	HashMerkleRoot types.Bytes
+	WitnessRoot    types.Bytes
+	TreeRoot       types.Bytes
+	ReservedRoot   types.Bytes
+	Mask           types.Bytes
+	Time           int32
+	Bits           types.Bytes
+	Difficulty     float64
+	Chainwork      types.Bytes
+	Nonce          int64
+	ExtraNonce     types.Bytes
+	Orphan         bool
+	TxsCount       int32
+}
+
+func (q *Queries) GetBlocks(ctx context.Context, arg GetBlocksParams) ([]GetBlocksRow, error) {
+	rows, err := q.db.QueryContext(ctx, getBlocks, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetBlocksRow{}
+	for rows.Next() {
+		var i GetBlocksRow
+		if err := rows.Scan(
+			&i.Hash,
+			&i.Height,
+			&i.Weight,
+			&i.Size,
+			&i.Version,
+			&i.HashMerkleRoot,
+			&i.WitnessRoot,
+			&i.TreeRoot,
+			&i.ReservedRoot,
+			&i.Mask,
+			&i.Time,
+			&i.Bits,
+			&i.Difficulty,
+			&i.Chainwork,
+			&i.Nonce,
+			&i.ExtraNonce,
+			&i.Orphan,
+			&i.TxsCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getBlocksMaxHeight = `-- name: GetBlocksMaxHeight :one
