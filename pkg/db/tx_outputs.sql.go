@@ -10,7 +10,7 @@ import (
 )
 
 const getTxOutputsByTxid = `-- name: GetTxOutputsByTxid :many
-SELECT txid, index, value, block_hash, address, covenant_action, tx_outputs.covenant_name_hash, covenant_height, tx_outputs.covenant_name, covenant_bid_hash, covenant_nonce, covenant_record_data, covenant_block_hash, covenant_version, covenant_address, covenant_claim_height, covenant_renewal_count, namehash.covenant_name as name FROM tx_outputs LEFT JOIN namehash ON tx_outputs.covenant_name_hash = namehash.covenant_name_hash WHERE "txid" = $1
+SELECT txid, index, value, address, covenant_action, tx_outputs.covenant_name_hash, covenant_height, tx_outputs.covenant_name, covenant_bid_hash, covenant_nonce, covenant_record_data, covenant_block_hash, covenant_version, covenant_address, covenant_claim_height, covenant_renewal_count, namehash.covenant_name as name FROM tx_outputs LEFT JOIN namehash ON tx_outputs.covenant_name_hash = namehash.covenant_name_hash WHERE "txid" = $1
 ORDER BY index
 `
 
@@ -27,7 +27,6 @@ func (q *Queries) GetTxOutputsByTxid(ctx context.Context, txid types.Bytes) ([]T
 			&i.Txid,
 			&i.Index,
 			&i.Value,
-			&i.BlockHash,
 			&i.Address,
 			&i.CovenantAction,
 			&i.CovenantNameHash,
@@ -57,19 +56,18 @@ func (q *Queries) GetTxOutputsByTxid(ctx context.Context, txid types.Bytes) ([]T
 }
 
 const insertBIDTxOutput = `-- name: InsertBIDTxOutput :exec
-INSERT INTO tx_outputs (txid, index, value, block_hash, address, covenant_action, covenant_name_hash, covenant_height, covenant_name, covenant_bid_hash) VALUES ($1, $2, $3, $4, $5, 'BID', $6, $7, $8, $9)
+INSERT INTO tx_outputs (txid, index, value, address, covenant_action, covenant_name_hash, covenant_height, covenant_name, covenant_bid_hash) VALUES ($1, $2, $3, $4, $5, 'BID', $6, $7, $8)
 `
 
 type InsertBIDTxOutputParams struct {
-	Txid             types.Bytes
-	Index            int32
-	Value            int64
-	BlockHash        types.Bytes
-	Address          string
-	CovenantNameHash *types.Bytes
-	CovenantHeight   *types.Bytes
-	CovenantName     *types.Bytes
-	CovenantBidHash  *types.Bytes
+	Txid            types.Bytes
+	Index           int32
+	Value           int64
+	Address         string
+	CovenantAction  CovenantAction
+	CovenantHeight  *types.Bytes
+	CovenantName    *types.Bytes
+	CovenantBidHash *types.Bytes
 }
 
 func (q *Queries) InsertBIDTxOutput(ctx context.Context, arg InsertBIDTxOutputParams) error {
@@ -77,9 +75,8 @@ func (q *Queries) InsertBIDTxOutput(ctx context.Context, arg InsertBIDTxOutputPa
 		arg.Txid,
 		arg.Index,
 		arg.Value,
-		arg.BlockHash,
 		arg.Address,
-		arg.CovenantNameHash,
+		arg.CovenantAction,
 		arg.CovenantHeight,
 		arg.CovenantName,
 		arg.CovenantBidHash,
@@ -88,18 +85,17 @@ func (q *Queries) InsertBIDTxOutput(ctx context.Context, arg InsertBIDTxOutputPa
 }
 
 const insertCLAIMTxOutput = `-- name: InsertCLAIMTxOutput :exec
-INSERT INTO tx_outputs (txid, index, value, block_hash, address, covenant_action, covenant_name_hash, covenant_height, covenant_name) VALUES ($1, $2, $3, $4, $5, 'CLAIM', $6, $7, $8)
+INSERT INTO tx_outputs (txid, index, value, address, covenant_action, covenant_name_hash, covenant_height, covenant_name) VALUES ($1, $2, $3, $4, $5, 'CLAIM', $6, $7)
 `
 
 type InsertCLAIMTxOutputParams struct {
-	Txid             types.Bytes
-	Index            int32
-	Value            int64
-	BlockHash        types.Bytes
-	Address          string
-	CovenantNameHash *types.Bytes
-	CovenantHeight   *types.Bytes
-	CovenantName     *types.Bytes
+	Txid           types.Bytes
+	Index          int32
+	Value          int64
+	Address        string
+	CovenantAction CovenantAction
+	CovenantHeight *types.Bytes
+	CovenantName   *types.Bytes
 }
 
 func (q *Queries) InsertCLAIMTxOutput(ctx context.Context, arg InsertCLAIMTxOutputParams) error {
@@ -107,9 +103,8 @@ func (q *Queries) InsertCLAIMTxOutput(ctx context.Context, arg InsertCLAIMTxOutp
 		arg.Txid,
 		arg.Index,
 		arg.Value,
-		arg.BlockHash,
 		arg.Address,
-		arg.CovenantNameHash,
+		arg.CovenantAction,
 		arg.CovenantHeight,
 		arg.CovenantName,
 	)
@@ -117,16 +112,15 @@ func (q *Queries) InsertCLAIMTxOutput(ctx context.Context, arg InsertCLAIMTxOutp
 }
 
 const insertFINALIZETxOutput = `-- name: InsertFINALIZETxOutput :exec
-INSERT INTO tx_outputs (txid, index, value, block_hash, address, covenant_action, covenant_name_hash, covenant_height, covenant_name, covenant_claim_height, covenant_renewal_count, covenant_block_hash) VALUES ($1, $2, $3, $4, $5, 'FINALIZE', $6, $7, $8, $9, $10, $11)
+INSERT INTO tx_outputs (txid, index, value, address, covenant_action, covenant_name_hash, covenant_height, covenant_name, covenant_claim_height, covenant_renewal_count, covenant_block_hash) VALUES ($1, $2, $3, $4, $5, 'FINALIZE', $6, $7, $8, $9, $10)
 `
 
 type InsertFINALIZETxOutputParams struct {
 	Txid                 types.Bytes
 	Index                int32
 	Value                int64
-	BlockHash            types.Bytes
 	Address              string
-	CovenantNameHash     *types.Bytes
+	CovenantAction       CovenantAction
 	CovenantHeight       *types.Bytes
 	CovenantName         *types.Bytes
 	CovenantClaimHeight  *types.Bytes
@@ -139,9 +133,8 @@ func (q *Queries) InsertFINALIZETxOutput(ctx context.Context, arg InsertFINALIZE
 		arg.Txid,
 		arg.Index,
 		arg.Value,
-		arg.BlockHash,
 		arg.Address,
-		arg.CovenantNameHash,
+		arg.CovenantAction,
 		arg.CovenantHeight,
 		arg.CovenantName,
 		arg.CovenantClaimHeight,
@@ -152,15 +145,14 @@ func (q *Queries) InsertFINALIZETxOutput(ctx context.Context, arg InsertFINALIZE
 }
 
 const insertNONETxOutput = `-- name: InsertNONETxOutput :exec
-INSERT INTO tx_outputs (txid, index, value, block_hash, address, covenant_action) VALUES ($1, $2, $3, $4, $5, 'NONE')
+INSERT INTO tx_outputs (txid, index, value, address, covenant_action) VALUES ($1, $2, $3, $4, 'NONE')
 `
 
 type InsertNONETxOutputParams struct {
-	Txid      types.Bytes
-	Index     int32
-	Value     int64
-	BlockHash types.Bytes
-	Address   string
+	Txid    types.Bytes
+	Index   int32
+	Value   int64
+	Address string
 }
 
 func (q *Queries) InsertNONETxOutput(ctx context.Context, arg InsertNONETxOutputParams) error {
@@ -168,25 +160,23 @@ func (q *Queries) InsertNONETxOutput(ctx context.Context, arg InsertNONETxOutput
 		arg.Txid,
 		arg.Index,
 		arg.Value,
-		arg.BlockHash,
 		arg.Address,
 	)
 	return err
 }
 
 const insertOPENTxOutput = `-- name: InsertOPENTxOutput :exec
-INSERT INTO tx_outputs (txid, index, value, block_hash, address, covenant_action, covenant_name_hash, covenant_height, covenant_name) VALUES ($1, $2, $3, $4, $5, 'OPEN', $6, $7, $8)
+INSERT INTO tx_outputs (txid, index, value, address, covenant_action, covenant_name_hash, covenant_height, covenant_name) VALUES ($1, $2, $3, $4, $5, 'OPEN', $6, $7)
 `
 
 type InsertOPENTxOutputParams struct {
-	Txid             types.Bytes
-	Index            int32
-	Value            int64
-	BlockHash        types.Bytes
-	Address          string
-	CovenantNameHash *types.Bytes
-	CovenantHeight   *types.Bytes
-	CovenantName     *types.Bytes
+	Txid           types.Bytes
+	Index          int32
+	Value          int64
+	Address        string
+	CovenantAction CovenantAction
+	CovenantHeight *types.Bytes
+	CovenantName   *types.Bytes
 }
 
 func (q *Queries) InsertOPENTxOutput(ctx context.Context, arg InsertOPENTxOutputParams) error {
@@ -194,9 +184,8 @@ func (q *Queries) InsertOPENTxOutput(ctx context.Context, arg InsertOPENTxOutput
 		arg.Txid,
 		arg.Index,
 		arg.Value,
-		arg.BlockHash,
 		arg.Address,
-		arg.CovenantNameHash,
+		arg.CovenantAction,
 		arg.CovenantHeight,
 		arg.CovenantName,
 	)
@@ -204,17 +193,16 @@ func (q *Queries) InsertOPENTxOutput(ctx context.Context, arg InsertOPENTxOutput
 }
 
 const insertREDEEMTxOutput = `-- name: InsertREDEEMTxOutput :exec
-INSERT INTO tx_outputs (txid, index, value, block_hash, address, covenant_action, covenant_name_hash, covenant_height) VALUES ($1, $2, $3, $4, $5, 'REDEEM', $6, $7)
+INSERT INTO tx_outputs (txid, index, value, address, covenant_action, covenant_name_hash, covenant_height) VALUES ($1, $2, $3, $4, $5, 'REDEEM', $6)
 `
 
 type InsertREDEEMTxOutputParams struct {
-	Txid             types.Bytes
-	Index            int32
-	Value            int64
-	BlockHash        types.Bytes
-	Address          string
-	CovenantNameHash *types.Bytes
-	CovenantHeight   *types.Bytes
+	Txid           types.Bytes
+	Index          int32
+	Value          int64
+	Address        string
+	CovenantAction CovenantAction
+	CovenantHeight *types.Bytes
 }
 
 func (q *Queries) InsertREDEEMTxOutput(ctx context.Context, arg InsertREDEEMTxOutputParams) error {
@@ -222,25 +210,23 @@ func (q *Queries) InsertREDEEMTxOutput(ctx context.Context, arg InsertREDEEMTxOu
 		arg.Txid,
 		arg.Index,
 		arg.Value,
-		arg.BlockHash,
 		arg.Address,
-		arg.CovenantNameHash,
+		arg.CovenantAction,
 		arg.CovenantHeight,
 	)
 	return err
 }
 
 const insertREGISTERTxOutput = `-- name: InsertREGISTERTxOutput :exec
-INSERT INTO tx_outputs (txid, index, value, block_hash, address, covenant_action, covenant_name_hash, covenant_height, covenant_record_data, covenant_block_hash) VALUES ($1, $2, $3, $4, $5, 'REGISTER', $6, $7, $8, $9)
+INSERT INTO tx_outputs (txid, index, value, address, covenant_action, covenant_name_hash, covenant_height, covenant_record_data, covenant_block_hash) VALUES ($1, $2, $3, $4, $5, 'REGISTER', $6, $7, $8)
 `
 
 type InsertREGISTERTxOutputParams struct {
 	Txid               types.Bytes
 	Index              int32
 	Value              int64
-	BlockHash          types.Bytes
 	Address            string
-	CovenantNameHash   *types.Bytes
+	CovenantAction     CovenantAction
 	CovenantHeight     *types.Bytes
 	CovenantRecordData *types.Bytes
 	CovenantBlockHash  *types.Bytes
@@ -251,9 +237,8 @@ func (q *Queries) InsertREGISTERTxOutput(ctx context.Context, arg InsertREGISTER
 		arg.Txid,
 		arg.Index,
 		arg.Value,
-		arg.BlockHash,
 		arg.Address,
-		arg.CovenantNameHash,
+		arg.CovenantAction,
 		arg.CovenantHeight,
 		arg.CovenantRecordData,
 		arg.CovenantBlockHash,
@@ -262,16 +247,15 @@ func (q *Queries) InsertREGISTERTxOutput(ctx context.Context, arg InsertREGISTER
 }
 
 const insertRENEWTxOutput = `-- name: InsertRENEWTxOutput :exec
-INSERT INTO tx_outputs (txid, index, value, block_hash, address, covenant_action, covenant_name_hash, covenant_height, covenant_block_hash) VALUES ($1, $2, $3, $4, $5, 'RENEW', $6, $7, $8)
+INSERT INTO tx_outputs (txid, index, value, address, covenant_action, covenant_name_hash, covenant_height, covenant_block_hash) VALUES ($1, $2, $3, $4, $5, 'RENEW', $6, $7)
 `
 
 type InsertRENEWTxOutputParams struct {
 	Txid              types.Bytes
 	Index             int32
 	Value             int64
-	BlockHash         types.Bytes
 	Address           string
-	CovenantNameHash  *types.Bytes
+	CovenantAction    CovenantAction
 	CovenantHeight    *types.Bytes
 	CovenantBlockHash *types.Bytes
 }
@@ -281,9 +265,8 @@ func (q *Queries) InsertRENEWTxOutput(ctx context.Context, arg InsertRENEWTxOutp
 		arg.Txid,
 		arg.Index,
 		arg.Value,
-		arg.BlockHash,
 		arg.Address,
-		arg.CovenantNameHash,
+		arg.CovenantAction,
 		arg.CovenantHeight,
 		arg.CovenantBlockHash,
 	)
@@ -291,18 +274,17 @@ func (q *Queries) InsertRENEWTxOutput(ctx context.Context, arg InsertRENEWTxOutp
 }
 
 const insertREVEALTxOutput = `-- name: InsertREVEALTxOutput :exec
-INSERT INTO tx_outputs (txid, index, value, block_hash, address, covenant_action, covenant_name_hash, covenant_height, covenant_nonce) VALUES ($1, $2, $3, $4, $5, 'REVEAL', $6, $7, $8)
+INSERT INTO tx_outputs (txid, index, value, address, covenant_action, covenant_name_hash, covenant_height, covenant_nonce) VALUES ($1, $2, $3, $4, $5, 'REVEAL', $6, $7)
 `
 
 type InsertREVEALTxOutputParams struct {
-	Txid             types.Bytes
-	Index            int32
-	Value            int64
-	BlockHash        types.Bytes
-	Address          string
-	CovenantNameHash *types.Bytes
-	CovenantHeight   *types.Bytes
-	CovenantNonce    *types.Bytes
+	Txid           types.Bytes
+	Index          int32
+	Value          int64
+	Address        string
+	CovenantAction CovenantAction
+	CovenantHeight *types.Bytes
+	CovenantNonce  *types.Bytes
 }
 
 func (q *Queries) InsertREVEALTxOutput(ctx context.Context, arg InsertREVEALTxOutputParams) error {
@@ -310,9 +292,8 @@ func (q *Queries) InsertREVEALTxOutput(ctx context.Context, arg InsertREVEALTxOu
 		arg.Txid,
 		arg.Index,
 		arg.Value,
-		arg.BlockHash,
 		arg.Address,
-		arg.CovenantNameHash,
+		arg.CovenantAction,
 		arg.CovenantHeight,
 		arg.CovenantNonce,
 	)
@@ -320,17 +301,16 @@ func (q *Queries) InsertREVEALTxOutput(ctx context.Context, arg InsertREVEALTxOu
 }
 
 const insertREVOKETxOutput = `-- name: InsertREVOKETxOutput :exec
-INSERT INTO tx_outputs (txid, index, value, block_hash, address, covenant_action, covenant_name_hash, covenant_height) VALUES ($1, $2, $3, $4, $5, 'REVOKE', $6, $7)
+INSERT INTO tx_outputs (txid, index, value, address, covenant_action, covenant_name_hash, covenant_height) VALUES ($1, $2, $3, $4, $5, 'REVOKE', $6)
 `
 
 type InsertREVOKETxOutputParams struct {
-	Txid             types.Bytes
-	Index            int32
-	Value            int64
-	BlockHash        types.Bytes
-	Address          string
-	CovenantNameHash *types.Bytes
-	CovenantHeight   *types.Bytes
+	Txid           types.Bytes
+	Index          int32
+	Value          int64
+	Address        string
+	CovenantAction CovenantAction
+	CovenantHeight *types.Bytes
 }
 
 func (q *Queries) InsertREVOKETxOutput(ctx context.Context, arg InsertREVOKETxOutputParams) error {
@@ -338,28 +318,26 @@ func (q *Queries) InsertREVOKETxOutput(ctx context.Context, arg InsertREVOKETxOu
 		arg.Txid,
 		arg.Index,
 		arg.Value,
-		arg.BlockHash,
 		arg.Address,
-		arg.CovenantNameHash,
+		arg.CovenantAction,
 		arg.CovenantHeight,
 	)
 	return err
 }
 
 const insertTRANSFERTxOutput = `-- name: InsertTRANSFERTxOutput :exec
-INSERT INTO tx_outputs (txid, index, value, block_hash, address, covenant_action, covenant_name_hash, covenant_height, covenant_version, covenant_address) VALUES ($1, $2, $3, $4, $5, 'TRANSFER', $6, $7, $8, $9)
+INSERT INTO tx_outputs (txid, index, value, address, covenant_action, covenant_name_hash, covenant_height, covenant_version, covenant_address) VALUES ($1, $2, $3, $4, $5, 'TRANSFER', $6, $7, $8)
 `
 
 type InsertTRANSFERTxOutputParams struct {
-	Txid             types.Bytes
-	Index            int32
-	Value            int64
-	BlockHash        types.Bytes
-	Address          string
-	CovenantNameHash *types.Bytes
-	CovenantHeight   *types.Bytes
-	CovenantVersion  *types.Bytes
-	CovenantAddress  *types.Bytes
+	Txid            types.Bytes
+	Index           int32
+	Value           int64
+	Address         string
+	CovenantAction  CovenantAction
+	CovenantHeight  *types.Bytes
+	CovenantVersion *types.Bytes
+	CovenantAddress *types.Bytes
 }
 
 func (q *Queries) InsertTRANSFERTxOutput(ctx context.Context, arg InsertTRANSFERTxOutputParams) error {
@@ -367,9 +345,8 @@ func (q *Queries) InsertTRANSFERTxOutput(ctx context.Context, arg InsertTRANSFER
 		arg.Txid,
 		arg.Index,
 		arg.Value,
-		arg.BlockHash,
 		arg.Address,
-		arg.CovenantNameHash,
+		arg.CovenantAction,
 		arg.CovenantHeight,
 		arg.CovenantVersion,
 		arg.CovenantAddress,
@@ -378,14 +355,13 @@ func (q *Queries) InsertTRANSFERTxOutput(ctx context.Context, arg InsertTRANSFER
 }
 
 const insertTxOutput = `-- name: InsertTxOutput :exec
-INSERT INTO tx_outputs (txid, index, value, block_hash, address, covenant_action, covenant_name_hash, covenant_height, covenant_name, covenant_bid_hash, covenant_nonce, covenant_record_data, covenant_block_hash, covenant_version, covenant_address, covenant_claim_height, covenant_renewal_count) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+INSERT INTO tx_outputs (txid, index, value, address, covenant_action, covenant_name_hash, covenant_height, covenant_name, covenant_bid_hash, covenant_nonce, covenant_record_data, covenant_block_hash, covenant_version, covenant_address, covenant_claim_height, covenant_renewal_count) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
 `
 
 type InsertTxOutputParams struct {
 	Txid                 types.Bytes
 	Index                int32
 	Value                int64
-	BlockHash            types.Bytes
 	Address              string
 	CovenantAction       CovenantAction
 	CovenantNameHash     *types.Bytes
@@ -401,12 +377,15 @@ type InsertTxOutputParams struct {
 	CovenantRenewalCount *types.Bytes
 }
 
+// -- name: GetTxOutputsByTxid :many
+// SELECT tx_outputs.*, namehash.covenant_name FROM tx_outputs, namehash WHERE tx_outputs.covenant_name_hash = namehash.covenant_name_hash AND tx_outputs.txid = $1
+// ORDER BY index;
+//
 func (q *Queries) InsertTxOutput(ctx context.Context, arg InsertTxOutputParams) error {
 	_, err := q.db.ExecContext(ctx, insertTxOutput,
 		arg.Txid,
 		arg.Index,
 		arg.Value,
-		arg.BlockHash,
 		arg.Address,
 		arg.CovenantAction,
 		arg.CovenantNameHash,
@@ -425,16 +404,15 @@ func (q *Queries) InsertTxOutput(ctx context.Context, arg InsertTxOutputParams) 
 }
 
 const insertUPDATETxOutput = `-- name: InsertUPDATETxOutput :exec
-INSERT INTO tx_outputs (txid, index, value, block_hash, address, covenant_action, covenant_name_hash, covenant_height, covenant_record_data) VALUES ($1, $2, $3, $4, $5, 'UPDATE', $6, $7, $8)
+INSERT INTO tx_outputs (txid, index, value, address, covenant_action, covenant_name_hash, covenant_height, covenant_record_data) VALUES ($1, $2, $3, $4, $5, 'UPDATE', $6, $7)
 `
 
 type InsertUPDATETxOutputParams struct {
 	Txid               types.Bytes
 	Index              int32
 	Value              int64
-	BlockHash          types.Bytes
 	Address            string
-	CovenantNameHash   *types.Bytes
+	CovenantAction     CovenantAction
 	CovenantHeight     *types.Bytes
 	CovenantRecordData *types.Bytes
 }
@@ -444,9 +422,8 @@ func (q *Queries) InsertUPDATETxOutput(ctx context.Context, arg InsertUPDATETxOu
 		arg.Txid,
 		arg.Index,
 		arg.Value,
-		arg.BlockHash,
 		arg.Address,
-		arg.CovenantNameHash,
+		arg.CovenantAction,
 		arg.CovenantHeight,
 		arg.CovenantRecordData,
 	)

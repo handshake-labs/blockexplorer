@@ -3,6 +3,7 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/handshake-labs/blockexplorer/pkg/types"
@@ -69,8 +70,8 @@ type Transaction struct {
 	WitnessTx types.Bytes
 	Fee       int64
 	Rate      int64
-	BlockHash types.Bytes
-	Index     int32
+	BlockHash *types.Bytes
+	Index     sql.NullInt32
 	Version   int32
 	Locktime  int32
 	Size      int64
@@ -82,14 +83,12 @@ type TxInput struct {
 	HashPrevout  types.Bytes
 	IndexPrevout int64
 	Sequence     int64
-	BlockHash    types.Bytes
 }
 
 type TxOutput struct {
 	Txid                 types.Bytes
 	Index                int32
 	Value                int64
-	BlockHash            types.Bytes
 	Address              string
 	CovenantAction       CovenantAction
 	CovenantNameHash     *types.Bytes

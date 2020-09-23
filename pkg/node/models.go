@@ -71,6 +71,14 @@ type MempoolTx struct {
 	TxOutputs []MempoolTxOutput `json:"outputs"`
 }
 
+func (mempoolTxInput *MempoolTxInput) HashPrevout() types.Bytes {
+	return mempoolTxInput.Prevout.Hash
+}
+
+func (mempoolTxInput *MempoolTxInput) IndexPrevout() int64 {
+	return mempoolTxInput.Prevout.Index
+}
+
 type MempoolTxInput struct {
 	Prevout struct {
 		Hash  types.Bytes `json:"hash"`

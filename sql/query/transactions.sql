@@ -11,3 +11,11 @@ FROM transactions
 WHERE block_hash = $1
 ORDER BY index
 LIMIT $2 OFFSET $3;
+
+
+-- name: GetMempoolTransactions :many
+SELECT *
+FROM transactions
+WHERE block_hash IS NULL 
+ORDER BY index
+LIMIT $1 OFFSET $2;

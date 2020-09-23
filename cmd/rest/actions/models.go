@@ -61,26 +61,5 @@ type TxOutput struct {
 	CovenantAddress      types.Bytes       `json:"covenantAddress,omitempty"`
 	CovenantClaimHeight  types.Bytes       `json:"covenantClaimHeight,omitempty"`
 	CovenantRenewalCount types.Bytes       `json:"covenantRenewalCount,omitempty"`
-	// Name                 types.Bytes       `json:"name,omitempty"`
-	Name string `json:"name,omitempty"`
-}
-
-type MempoolTx struct {
-	Txid      types.Bytes      `json:"hash"`
-	WitnessTx types.Bytes      `json:"witnessHash"`
-	Mtime     int64            `json:"mtime"`
-	Version   int32            `json:"version"`
-	Locktime  int32            `json:"locktime"`
-	TxInputs  []MempoolTxInput `json:"inputs"`
-	TxOutputs []TxOutput       `json:"outputs"`
-}
-
-type MempoolTxInput struct {
-	Prevout struct {
-		Hash  types.Bytes `json:"hash"`
-		Index int64       `json:"index"`
-	} `json:"prevout"`
-	Witness  []types.Bytes `json:"witness"`
-	Sequence int64         `json:"sequence"`
-	Address  string        `json:"address"`
+	Name                 string            `json:"name,omitempty"`
 }

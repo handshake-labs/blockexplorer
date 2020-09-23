@@ -14,6 +14,26 @@ import (
 	"github.com/jinzhu/copier"
 )
 
+func deleteMempool(pg *sql.DB, nc *node.Client) error {
+	q := db.New(pg)
+	err := q.DeleteMempool(context.Background())
+	return err
+}
+
+func syncMempool(pg *sql.DB, nc *node.Client) error {
+	deleteMempool(pg, nc)
+	q := db.New(pg)
+	txs, err := nc.GetMempool(context.Background())
+	for _, transaction := range *txs {
+		tx := node.Transaction{}
+		copier.Copy(&tx, &transaction)
+		if err := insertTransaction(q, &tx, nil, nil); err != nil {
+			return err
+		}
+	}
+	return err
+}
+
 func syncBlocks(pg *sql.DB, nc *node.Client) error {
 	height, hash, err := getSyncedHead(pg, nc)
 	q := db.New(pg)
@@ -69,6 +89,98 @@ func getSyncedHead(pg *sql.DB, nc *node.Client) (int32, types.Bytes, error) {
 	return -1, nil, nil
 }
 
+func insertTransaction(q *db.Queries, transaction *node.Transaction, blockHash *types.Bytes, index *int32) error {
+	transactionParams := db.InsertTransactionParams{}
+	copier.Copy(&transactionParams, &transaction)
+	var err error
+	transactionParams.BlockHash = blockHash
+	var nullableIndex sql.NullInt32
+	if index == nil {
+		nullableIndex.Valid = false
+	} else {
+		nullableIndex.Valid = true
+		nullableIndex.Int32 = *index
+	}
+	transactionParams.Index = nullableIndex
+	if err = q.InsertTransaction(context.Background(), transactionParams); err != nil {
+		return err
+	}
+	for index, txInput := range transaction.TxInputs {
+		txInputParams := db.InsertTxInputParams{}
+		txInputParams.Txid = transactionParams.Txid
+		txInputParams.Index = int64(index)
+		copier.Copy(&txInputParams, &txInput)
+		if err := q.InsertTxInput(context.Background(), txInputParams); err != nil {
+			return err
+		}
+	}
+	for index, txOutput := range transaction.TxOutputs {
+		txOutputParams := db.InsertTxOutputParams{}
+		txOutputParams.Txid = transactionParams.Txid
+		txOutputParams.CovenantAction = db.CovenantAction(txOutput.Covenant.CovenantAction)
+		copier.Copy(&txOutputParams, &txOutput)
+		txOutputParams.Index = int32(index)
+		covenantItems := txOutput.Covenant.CovenantItems
+		switch txOutputParams.CovenantAction {
+		case "NONE":
+		case "CLAIM":
+			txOutputParams.CovenantNameHash = &covenantItems[0]
+			txOutputParams.CovenantHeight = &covenantItems[1]
+			txOutputParams.CovenantName = &covenantItems[2]
+		case "OPEN":
+			txOutputParams.CovenantNameHash = &covenantItems[0]
+			txOutputParams.CovenantHeight = &covenantItems[1]
+			txOutputParams.CovenantName = &covenantItems[2]
+		case "BID":
+			txOutputParams.CovenantNameHash = &covenantItems[0]
+			txOutputParams.CovenantHeight = &covenantItems[1]
+			txOutputParams.CovenantName = &covenantItems[2]
+			txOutputParams.CovenantBidHash = &covenantItems[3]
+		case "REVEAL":
+			txOutputParams.CovenantNameHash = &covenantItems[0]
+			txOutputParams.CovenantHeight = &covenantItems[1]
+			txOutputParams.CovenantNonce = &covenantItems[2]
+		case "REDEEM":
+			txOutputParams.CovenantNameHash = &covenantItems[0]
+			txOutputParams.CovenantHeight = &covenantItems[1]
+		case "REGISTER":
+			txOutputParams.CovenantNameHash = &covenantItems[0]
+			txOutputParams.CovenantHeight = &covenantItems[1]
+			txOutputParams.CovenantRecordData = &covenantItems[2]
+			txOutputParams.CovenantBlockHash = &covenantItems[3]
+		case "UPDATE":
+			txOutputParams.CovenantNameHash = &covenantItems[0]
+			txOutputParams.CovenantHeight = &covenantItems[1]
+			txOutputParams.CovenantRecordData = &covenantItems[2]
+		case "RENEW":
+			txOutputParams.CovenantNameHash = &covenantItems[0]
+			txOutputParams.CovenantHeight = &covenantItems[1]
+			txOutputParams.CovenantBlockHash = &covenantItems[2]
+		case "TRANSFER":
+			txOutputParams.CovenantNameHash = &covenantItems[0]
+			txOutputParams.CovenantHeight = &covenantItems[1]
+			txOutputParams.CovenantVersion = &covenantItems[2]
+			txOutputParams.CovenantAddress = &covenantItems[3]
+		case "FINALIZE":
+			txOutputParams.CovenantNameHash = &covenantItems[0]
+			txOutputParams.CovenantHeight = &covenantItems[1]
+			txOutputParams.CovenantName = &covenantItems[2]
+			txOutputParams.CovenantClaimHeight = &covenantItems[4]
+			txOutputParams.CovenantRenewalCount = &covenantItems[5]
+			txOutputParams.CovenantBlockHash = &covenantItems[6]
+		case "REVOKE":
+			txOutputParams.CovenantNameHash = &covenantItems[0]
+			txOutputParams.CovenantHeight = &covenantItems[1]
+		default:
+			return errors.New("Unknown covenant action")
+		}
+		if err := q.InsertTxOutput(context.Background(), txOutputParams); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func syncBlock(pg *sql.DB, block *node.Block) error {
 	tx, err := pg.BeginTx(context.Background(), nil)
 	if err != nil {
@@ -82,86 +194,9 @@ func syncBlock(pg *sql.DB, block *node.Block) error {
 		return err
 	}
 	for tx_index, transaction := range block.Transactions {
-		transactionParams := db.InsertTransactionParams{}
-		transactionParams.BlockHash = blockParams.Hash
-		transactionParams.Index = int32(tx_index)
-		copier.Copy(&transactionParams, &transaction)
-		if err = q.InsertTransaction(context.Background(), transactionParams); err != nil {
+		ind := int32(tx_index)
+		if err := insertTransaction(q, &transaction, &blockParams.Hash, &ind); err != nil {
 			return err
-		}
-		for index, txInput := range transaction.TxInputs {
-			txInputParams := db.InsertTxInputParams{}
-			txInputParams.Txid = transactionParams.Txid
-			txInputParams.Index = int64(index)
-			txInputParams.BlockHash = blockParams.Hash
-			copier.Copy(&txInputParams, &txInput)
-			if err := q.InsertTxInput(context.Background(), txInputParams); err != nil {
-				return err
-			}
-		}
-		for _, txOutput := range transaction.TxOutputs {
-			txOutputParams := db.InsertTxOutputParams{}
-			txOutputParams.Txid = transactionParams.Txid
-			txOutputParams.BlockHash = blockParams.Hash
-			txOutputParams.CovenantAction = db.CovenantAction(txOutput.Covenant.CovenantAction)
-			copier.Copy(&txOutputParams, &txOutput)
-			covenantItems := txOutput.Covenant.CovenantItems
-			switch txOutputParams.CovenantAction {
-			case "NONE":
-			case "CLAIM":
-				txOutputParams.CovenantNameHash = &covenantItems[0]
-				txOutputParams.CovenantHeight = &covenantItems[1]
-				txOutputParams.CovenantName = &covenantItems[2]
-			case "OPEN":
-				txOutputParams.CovenantNameHash = &covenantItems[0]
-				txOutputParams.CovenantHeight = &covenantItems[1]
-				txOutputParams.CovenantName = &covenantItems[2]
-			case "BID":
-				txOutputParams.CovenantNameHash = &covenantItems[0]
-				txOutputParams.CovenantHeight = &covenantItems[1]
-				txOutputParams.CovenantName = &covenantItems[2]
-				txOutputParams.CovenantBidHash = &covenantItems[3]
-			case "REVEAL":
-				txOutputParams.CovenantNameHash = &covenantItems[0]
-				txOutputParams.CovenantHeight = &covenantItems[1]
-				txOutputParams.CovenantNonce = &covenantItems[2]
-			case "REDEEM":
-				txOutputParams.CovenantNameHash = &covenantItems[0]
-				txOutputParams.CovenantHeight = &covenantItems[1]
-			case "REGISTER":
-				txOutputParams.CovenantNameHash = &covenantItems[0]
-				txOutputParams.CovenantHeight = &covenantItems[1]
-				txOutputParams.CovenantRecordData = &covenantItems[2]
-				txOutputParams.CovenantBlockHash = &covenantItems[3]
-			case "UPDATE":
-				txOutputParams.CovenantNameHash = &covenantItems[0]
-				txOutputParams.CovenantHeight = &covenantItems[1]
-				txOutputParams.CovenantRecordData = &covenantItems[2]
-			case "RENEW":
-				txOutputParams.CovenantNameHash = &covenantItems[0]
-				txOutputParams.CovenantHeight = &covenantItems[1]
-				txOutputParams.CovenantBlockHash = &covenantItems[2]
-			case "TRANSFER":
-				txOutputParams.CovenantNameHash = &covenantItems[0]
-				txOutputParams.CovenantHeight = &covenantItems[1]
-				txOutputParams.CovenantVersion = &covenantItems[2]
-				txOutputParams.CovenantAddress = &covenantItems[3]
-			case "FINALIZE":
-				txOutputParams.CovenantNameHash = &covenantItems[0]
-				txOutputParams.CovenantHeight = &covenantItems[1]
-				txOutputParams.CovenantName = &covenantItems[2]
-				txOutputParams.CovenantClaimHeight = &covenantItems[4]
-				txOutputParams.CovenantRenewalCount = &covenantItems[5]
-				txOutputParams.CovenantBlockHash = &covenantItems[6]
-			case "REVOKE":
-				txOutputParams.CovenantNameHash = &covenantItems[0]
-				txOutputParams.CovenantHeight = &covenantItems[1]
-			default:
-				return errors.New("Unknown covenant action")
-			}
-			if err := q.InsertTxOutput(context.Background(), txOutputParams); err != nil {
-				return err
-			}
 		}
 	}
 	if err := tx.Commit(); err != nil {

@@ -16,9 +16,6 @@ import (
 )
 
 func main() {
-	// log.Println("www")
-	// x := db.GetMostExpensiveNames()
-
 	pg, err1 := sql.Open("postgres", os.Getenv("POSTGRES_URI"))
 	log.Println(err1)
 	q := db.New(pg)
@@ -29,16 +26,24 @@ func main() {
 	sha.Write([]byte("js"))
 	// sum := sha.Sum(nil)
 	// log.Print(sum)
-	rr, err99 := q.GetAuctionHistoryByName(context.Background(), db.GetAuctionHistoryByNameParams{Name: "ximik", Offset: 0, Limit: 50})
-	log.Println(rr)
-	log.Println(err99)
-
-	check, err0 := q.CheckReservedName(context.Background(), types.Bytes("ximik"))
-	if err0 == sql.ErrNoRows {
-		log.Printf("yoyoy")
-
-	}
-	log.Printf("%+v", check)
+	// rr, err99 := q.GetAuctionHistoryByName(context.Background(), db.GetAuctionHistoryByNameParams{Name: "ximik", Offset: 0, Limit: 50})
+	// log.Println(rr)
+	// log.Println(err99)
+	//
+	// check, err0 := q.CheckReservedName(context.Background(), types.Bytes("ximik"))
+	// if err0 == sql.ErrNoRows {
+	// 	log.Printf("yoyoy")
+	//
+	// }
+	// log.Printf("%+v", check)
+	//
+	transactions, err := q.GetTransactionsByBlockHash(context.Background(), db.GetTransactionsByBlockHashParams{
+		BlockHash: nil,
+		Limit:     int32(0),
+		Offset:    0,
+	})
+	log.Printf("%+v", transactions)
+	log.Printf("%+v", err)
 
 	// aa, err101 := q.GetTxOutputsByTxid(context.Background(), types.Bytes("82f324aff4d93df901b9c0579d63fc9fa33b63c8a2495905723de974c47581ba"))
 	z, _ := hex.DecodeString("82f324aff4d93df901b9c0579d63fc9fa33b63c8a2495905723de974c47581ba")

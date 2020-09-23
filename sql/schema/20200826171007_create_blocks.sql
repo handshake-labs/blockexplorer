@@ -1,7 +1,7 @@
 -- +goose Up
 -- SQL in this section is executed when the migration is applied.
 CREATE TABLE blocks (
-    hash bytea NOT NULL PRIMARY KEY CHECK (LENGTH(hash) = 32),
+    hash bytea PRIMARY KEY CHECK (LENGTH(hash) = 32),
     "height" integer UNIQUE NOT NULL CHECK (HEIGHT >= 0),
     weight integer NOT NULL,
     "size" bigint NOT NULL,

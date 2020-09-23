@@ -9,9 +9,9 @@ import (
 )
 
 type GetTransactionsByBlockHashParams struct {
-	BlockHash types.Bytes `json:"hash"`
-	Limit     int8        `json:"limit"`
-	Offset    int32       `json:"offset"`
+	BlockHash *types.Bytes `json:"hash"`
+	Limit     int8         `json:"limit"`
+	Offset    int32        `json:"offset"`
 }
 
 type GetTransactionsByBlockHashResult struct {

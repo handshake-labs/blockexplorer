@@ -5,9 +5,56 @@ package db
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 )
+
+const getMempoolTransactions = `-- name: GetMempoolTransactions :many
+SELECT txid, witness_tx, fee, rate, block_hash, index, version, locktime, size
+FROM transactions
+WHERE block_hash IS NULL 
+ORDER BY index
+LIMIT $1 OFFSET $2
+`
+
+type GetMempoolTransactionsParams struct {
+	Limit  int32
+	Offset int32
+}
+
+func (q *Queries) GetMempoolTransactions(ctx context.Context, arg GetMempoolTransactionsParams) ([]Transaction, error) {
+	rows, err := q.db.QueryContext(ctx, getMempoolTransactions, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Transaction{}
+	for rows.Next() {
+		var i Transaction
+		if err := rows.Scan(
+			&i.Txid,
+			&i.WitnessTx,
+			&i.Fee,
+			&i.Rate,
+			&i.BlockHash,
+			&i.Index,
+			&i.Version,
+			&i.Locktime,
+			&i.Size,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
 
 const getTransactionByTxid = `-- name: GetTransactionByTxid :one
 SELECT transactions.txid, transactions.witness_tx, transactions.fee, transactions.rate, transactions.block_hash, transactions.index, transactions.version, transactions.locktime, transactions.size, blocks.height FROM transactions, blocks WHERE transactions.block_hash=blocks.hash AND transactions.txid = $1
@@ -18,8 +65,8 @@ type GetTransactionByTxidRow struct {
 	WitnessTx types.Bytes
 	Fee       int64
 	Rate      int64
-	BlockHash types.Bytes
-	Index     int32
+	BlockHash *types.Bytes
+	Index     sql.NullInt32
 	Version   int32
 	Locktime  int32
 	Size      int64
@@ -53,7 +100,7 @@ LIMIT $2 OFFSET $3
 `
 
 type GetTransactionsByBlockHashParams struct {
-	BlockHash types.Bytes
+	BlockHash *types.Bytes
 	Limit     int32
 	Offset    int32
 }
@@ -101,8 +148,8 @@ type InsertTransactionParams struct {
 	WitnessTx types.Bytes
 	Fee       int64
 	Rate      int64
-	BlockHash types.Bytes
-	Index     int32
+	BlockHash *types.Bytes
+	Index     sql.NullInt32
 	Version   int32
 	Locktime  int32
 	Size      int64

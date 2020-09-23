@@ -19,6 +19,11 @@ func main() {
 	}
 	nc := node.NewClient(os.Getenv("NODE_API_ORIGIN"), os.Getenv("NODE_API_KEY"))
 	for {
+		if err := syncMempool(pg, nc); err != nil {
+			log.Println(err)
+			time.Sleep(time.Second)
+			continue
+		}
 		if err := syncBlocks(pg, nc); err != nil {
 			log.Println(err)
 			time.Sleep(time.Second)
