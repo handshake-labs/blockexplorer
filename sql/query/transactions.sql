@@ -3,7 +3,7 @@ INSERT INTO transactions (txid, witness_tx, fee, rate, block_hash, index, "versi
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
 
 -- name: GetTransactionByTxid :one
-SELECT transactions.*, blocks.height FROM transactions, blocks WHERE transactions.block_hash=blocks.hash AND transactions.txid = $1;
+SELECT transactions.*, COALESCE(blocks.height, -1) FROM transactions LEFT OUTER JOIN blocks ON transactions.block_hash=blocks.hash WHERE transactions.txid = $1;
 
 -- name: GetTransactionsByBlockHash :many
 SELECT *

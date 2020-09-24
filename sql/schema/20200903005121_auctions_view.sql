@@ -17,6 +17,7 @@ lockups.address = reveals.address AND
 lockups.covenant_action = 'BID')
 left join tx_inputs ins on (ins.txid = reveals.txid) AND (ins.index = lockups.index)
 WHERE
+transactions.block_hash IS NOT NULL AND
 lockups.txid=transactions.txid AND
 transactions.block_hash = blocks.hash;
 

@@ -57,7 +57,7 @@ func (q *Queries) GetMempoolTransactions(ctx context.Context, arg GetMempoolTran
 }
 
 const getTransactionByTxid = `-- name: GetTransactionByTxid :one
-SELECT transactions.txid, transactions.witness_tx, transactions.fee, transactions.rate, transactions.block_hash, transactions.index, transactions.version, transactions.locktime, transactions.size, blocks.height FROM transactions, blocks WHERE transactions.block_hash=blocks.hash AND transactions.txid = $1
+SELECT transactions.txid, transactions.witness_tx, transactions.fee, transactions.rate, transactions.block_hash, transactions.index, transactions.version, transactions.locktime, transactions.size, COALESCE(blocks.height, -1) FROM transactions LEFT OUTER JOIN blocks ON transactions.block_hash=blocks.hash WHERE transactions.txid = $1
 `
 
 type GetTransactionByTxidRow struct {

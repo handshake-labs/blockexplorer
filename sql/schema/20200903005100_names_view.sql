@@ -11,6 +11,7 @@ sum(reveals.value) AS sum_revealed,
 count(distinct(reveals.txid, reveals.index)) AS bidcount
 FROM transactions, blocks, tx_outputs lockups, tx_outputs opens, tx_outputs reveals LEFT OUTER JOIN
 tx_outputs bids ON (bids.covenant_name_hash = reveals.covenant_name_hash) WHERE
+transactions.block_hash IS NOT NULL AND
 lockups.covenant_name_hash = bids.covenant_name_hash AND
 reveals.covenant_action = 'REVEAL' AND
 bids.covenant_action='BID' AND
