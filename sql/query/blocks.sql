@@ -12,6 +12,11 @@ FROM blocks
 ORDER BY height DESC
 LIMIT $1 OFFSET $2;
 
+-- name: GetBlockByHeight :one
+SELECT *
+FROM blocks
+WHERE height = $1;
+
 -- name: GetBlockByHash :one
 SELECT *, (
   SELECT COUNT(*)
