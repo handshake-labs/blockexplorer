@@ -1,0 +1,11 @@
+FROM golang:1.14.3-alpine AS build
+RUN apt-get update
+RUN apt-get install -y gcc
+WORKDIR /src
+COPY . .
+
+
+RUN go build  ./cmd/sync 
+RUN goose -dir sql/schema postgres $POSTGRES_URI reset 
+RUN goose -dir sql/schema postgres $POSTGRES_URI up 
+ENTRYPOINT ["./sync"]
