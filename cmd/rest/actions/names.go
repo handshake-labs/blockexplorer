@@ -278,11 +278,12 @@ type GetNameInfoParams struct {
 }
 
 type GetNameInfoResult struct {
-	Reserved    bool            `json:"reserved"`
-	Reservation db.ReservedName `json:"reservation"`
-	Records     []db.RecordRow  `json:"records"`
-	Count       int16           `json:"count"`
-	Limit       int16           `json:"limit"`
+	Reserved    bool                   `json:"reserved"`
+	Reservation db.ReservedName        `json:"reservation"`
+	Records     []db.RecordRow         `json:"records"`
+	Auction     []db.AuctionHistoryRow `json:"auction"`
+	Count       int16                  `json:"count"`
+	Limit       int16                  `json:"limit"`
 }
 
 func GetNameInfo(ctx *Context, params *GetNameInfoParams) (*GetNameInfoResult, error) {
@@ -316,8 +317,15 @@ func GetNameInfo(ctx *Context, params *GetNameInfoParams) (*GetNameInfoResult, e
 		Offset:   page * result.Limit,
 	})
 
-	// log.Println(err)
+	auctionRows, err := ctx.db.GetAuctionHistoryByName(ctx, db.GetAuctionHistoryByNameParams{
+		Name:   params.Name,
+		Limit:  result.Limit,
+		Offset: page * result.Limit,
+	})
 
+	result.Auction = auctionRows
+
+	// log.Println(err)
 	// if err != nil {
 	// 	if err == sql.ErrNoRows {
 	// 		return nil, nil

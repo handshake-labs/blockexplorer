@@ -5,7 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	// "log"
 
 	"github.com/handshake-labs/blockexplorer/pkg/db"
 	"github.com/handshake-labs/blockexplorer/pkg/node"
@@ -22,7 +21,12 @@ func deleteMempool(pg *sql.DB, nc *node.Client) error {
 
 func syncMempool(pg *sql.DB, nc *node.Client) error {
 	deleteMempool(pg, nc)
-	q := db.New(pg)
+	tx, err := pg.BeginTx(context.Background(), nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	q := db.New(tx)
 	txs, err := nc.GetMempool(context.Background())
 	for _, transaction := range *txs {
 		tx := node.Transaction{}
@@ -31,18 +35,24 @@ func syncMempool(pg *sql.DB, nc *node.Client) error {
 			return err
 		}
 	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
 	return err
 }
 
 func syncBlocks(pg *sql.DB, nc *node.Client) error {
 	height, hash, err := getSyncedHead(pg, nc)
-	q := db.New(pg)
 	if err != nil {
 		return err
 	}
 	maxHeight, err := nc.GetBlocksHeight(context.Background())
 	if err != nil {
 		return err
+	}
+	if height < maxHeight {
+		q := db.New(pg)
+		defer q.RefreshViews(context.Background())
 	}
 	for height < maxHeight {
 		height += 1
@@ -59,7 +69,6 @@ func syncBlocks(pg *sql.DB, nc *node.Client) error {
 		}
 		hash = block.Hash
 	}
-	q.RefreshViews(context.Background())
 	return nil
 }
 

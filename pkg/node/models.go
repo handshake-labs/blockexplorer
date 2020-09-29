@@ -61,6 +61,10 @@ func (txOutput *TxOutput) Address() string {
 	return txOutput.MyAddress.String
 }
 
+type MyAddress struct {
+	String string
+}
+
 type MempoolTx struct {
 	Txid      types.Bytes       `json:"hash"`
 	WitnessTx types.Bytes       `json:"witnessHash"`
@@ -77,6 +81,10 @@ func (mempoolTxInput *MempoolTxInput) HashPrevout() types.Bytes {
 
 func (mempoolTxInput *MempoolTxInput) IndexPrevout() int64 {
 	return mempoolTxInput.Prevout.Index
+}
+
+func (txOutput *MempoolTxOutput) MyAddress() MyAddress {
+	return MyAddress{String: txOutput.Address}
 }
 
 type MempoolTxInput struct {

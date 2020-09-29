@@ -40,4 +40,3 @@ INSERT INTO tx_outputs (txid, index, value, address, covenant_action, covenant_n
 
 -- name: InsertREVOKETxOutput :exec
 INSERT INTO tx_outputs (txid, index, value, address, covenant_action, covenant_name_hash, covenant_height) VALUES ($1, $2, $3, $4, $5, 'REVOKE', $6);
-

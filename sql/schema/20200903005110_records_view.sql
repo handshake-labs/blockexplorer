@@ -7,6 +7,7 @@ covenant_name_hash,
 tx_outputs.txid,
 tx_outputs.index
 FROM tx_outputs, transactions, blocks WHERE
+transactions.block_hash IS NOT NULL AND
 transactions.txid = tx_outputs.txid AND
 transactions.block_hash = blocks.hash AND
 covenant_record_data IS NOT NULL

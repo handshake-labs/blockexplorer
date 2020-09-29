@@ -22,7 +22,6 @@ func main() {
 		if err := syncMempool(pg, nc); err != nil {
 			log.Println(err)
 			time.Sleep(time.Second)
-			continue
 		}
 		if err := syncBlocks(pg, nc); err != nil {
 			log.Println(err)
