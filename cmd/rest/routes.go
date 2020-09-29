@@ -6,8 +6,8 @@ import (
 
 var routes = map[string]interface{}{
 	"/blocks":              GetBlocks,
-	"/block":               GetBlockByHash,
-	"/block/txs":           GetTransactionsByBlockHash,
+	"/block":               GetBlockByHeight,
+	"/block/txs":           GetTransactionsByBlockHeight,
 	"/lists/expensive":     GetListExpensive,    //the most expensive names
 	"/lists/lockup_volume": GetListLockupVolume, //names with the most auction volume
 	"/lists/reveal_volume": GetListRevealVolume, //names with the most auction volume

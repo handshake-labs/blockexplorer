@@ -3,29 +3,28 @@ package actions
 import (
 	"database/sql"
 
-	"github.com/handshake-labs/blockexplorer/pkg/types"
 	"github.com/jinzhu/copier"
 
 	"github.com/handshake-labs/blockexplorer/pkg/db"
 )
 
-type GetBlockByHashParams struct {
-	Hash types.Bytes `json:"hash"`
+type GetBlockByHeightParams struct {
+	Height int32 `json:"height"`
 }
 
-type GetBlockByHashResult struct {
+type GetBlockByHeightResult struct {
 	Block Block `json:"block"`
 }
 
-func GetBlockByHash(ctx *Context, params *GetBlockByHashParams) (*GetBlockByHashResult, error) {
-	block, err := ctx.db.GetBlockByHash(ctx, params.Hash)
+func GetBlockByHeight(ctx *Context, params *GetBlockByHeightParams) (*GetBlockByHeightResult, error) {
+	block, err := ctx.db.GetBlockByHeight(ctx, params.Height)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, err
 	}
-	result := &GetBlockByHashResult{}
+	result := &GetBlockByHeightResult{}
 	copier.Copy(&result.Block, &block)
 	return result, nil
 }

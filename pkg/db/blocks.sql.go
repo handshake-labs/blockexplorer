@@ -20,13 +20,10 @@ func (q *Queries) DeleteBlocksAfterHeight(ctx context.Context, height int32) err
 }
 
 const getBlockByHash = `-- name: GetBlockByHash :one
-SELECT hash, height, weight, size, version, hash_merkle_root, witness_root, tree_root, reserved_root, mask, time, bits, difficulty, chainwork, nonce, extra_nonce, orphan, (
-  SELECT COUNT(*)
-  FROM transactions
-  WHERE block_hash = blocks.hash
-)::integer AS txs_count
-FROM blocks
-WHERE hash = $1
+SELECT blocks.hash, blocks.height, blocks.weight, blocks.size, blocks.version, blocks.hash_merkle_root, blocks.witness_root, blocks.tree_root, blocks.reserved_root, blocks.mask, blocks.time, blocks.bits, blocks.difficulty, blocks.chainwork, blocks.nonce, blocks.extra_nonce, blocks.orphan, COUNT(transactions.txid)::integer AS txs_count
+FROM blocks INNER JOIN transactions ON (blocks.hash = transactions.block_hash)
+WHERE blocks.hash = $1
+GROUP BY blocks.hash
 `
 
 type GetBlockByHashRow struct {
@@ -76,6 +73,60 @@ func (q *Queries) GetBlockByHash(ctx context.Context, hash types.Bytes) (GetBloc
 	return i, err
 }
 
+const getBlockByHeight = `-- name: GetBlockByHeight :one
+SELECT blocks.hash, blocks.height, blocks.weight, blocks.size, blocks.version, blocks.hash_merkle_root, blocks.witness_root, blocks.tree_root, blocks.reserved_root, blocks.mask, blocks.time, blocks.bits, blocks.difficulty, blocks.chainwork, blocks.nonce, blocks.extra_nonce, blocks.orphan, COUNT(transactions.txid)::integer AS txs_count
+FROM blocks INNER JOIN transactions ON (blocks.hash = transactions.block_hash)
+WHERE blocks.height = $1
+GROUP BY blocks.hash
+`
+
+type GetBlockByHeightRow struct {
+	Hash           types.Bytes
+	Height         int32
+	Weight         int32
+	Size           int64
+	Version        int32
+	HashMerkleRoot types.Bytes
+	WitnessRoot    types.Bytes
+	TreeRoot       types.Bytes
+	ReservedRoot   types.Bytes
+	Mask           types.Bytes
+	Time           int32
+	Bits           types.Bytes
+	Difficulty     float64
+	Chainwork      types.Bytes
+	Nonce          int64
+	ExtraNonce     types.Bytes
+	Orphan         bool
+	TxsCount       int32
+}
+
+func (q *Queries) GetBlockByHeight(ctx context.Context, height int32) (GetBlockByHeightRow, error) {
+	row := q.db.QueryRowContext(ctx, getBlockByHeight, height)
+	var i GetBlockByHeightRow
+	err := row.Scan(
+		&i.Hash,
+		&i.Height,
+		&i.Weight,
+		&i.Size,
+		&i.Version,
+		&i.HashMerkleRoot,
+		&i.WitnessRoot,
+		&i.TreeRoot,
+		&i.ReservedRoot,
+		&i.Mask,
+		&i.Time,
+		&i.Bits,
+		&i.Difficulty,
+		&i.Chainwork,
+		&i.Nonce,
+		&i.ExtraNonce,
+		&i.Orphan,
+		&i.TxsCount,
+	)
+	return i, err
+}
+
 const getBlockHashByHeight = `-- name: GetBlockHashByHeight :one
 SELECT hash
 FROM blocks
@@ -90,12 +141,9 @@ func (q *Queries) GetBlockHashByHeight(ctx context.Context, height int32) (types
 }
 
 const getBlocks = `-- name: GetBlocks :many
-SELECT hash, height, weight, size, version, hash_merkle_root, witness_root, tree_root, reserved_root, mask, time, bits, difficulty, chainwork, nonce, extra_nonce, orphan, (
-  SELECT COUNT(*)
-  FROM transactions
-  WHERE block_hash = blocks.hash
-)::integer AS txs_count
-FROM blocks
+SELECT blocks.hash, blocks.height, blocks.weight, blocks.size, blocks.version, blocks.hash_merkle_root, blocks.witness_root, blocks.tree_root, blocks.reserved_root, blocks.mask, blocks.time, blocks.bits, blocks.difficulty, blocks.chainwork, blocks.nonce, blocks.extra_nonce, blocks.orphan, COUNT(transactions.txid)::integer AS txs_count
+FROM blocks INNER JOIN transactions ON (blocks.hash = transactions.block_hash)
+GROUP BY blocks.hash
 ORDER BY height DESC
 LIMIT $1 OFFSET $2
 `

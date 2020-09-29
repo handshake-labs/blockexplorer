@@ -13,7 +13,7 @@ import (
 const getMempoolTransactions = `-- name: GetMempoolTransactions :many
 SELECT txid, witness_tx, fee, rate, block_hash, index, version, locktime, size
 FROM transactions
-WHERE block_hash IS NULL 
+WHERE block_hash IS NULL
 ORDER BY index
 LIMIT $1 OFFSET $2
 `
@@ -57,20 +57,22 @@ func (q *Queries) GetMempoolTransactions(ctx context.Context, arg GetMempoolTran
 }
 
 const getTransactionByTxid = `-- name: GetTransactionByTxid :one
-SELECT transactions.txid, transactions.witness_tx, transactions.fee, transactions.rate, transactions.block_hash, transactions.index, transactions.version, transactions.locktime, transactions.size, blocks.height FROM transactions, blocks WHERE transactions.block_hash=blocks.hash AND transactions.txid = $1
+SELECT transactions.txid, transactions.witness_tx, transactions.fee, transactions.rate, transactions.block_hash, transactions.index, transactions.version, transactions.locktime, transactions.size, COALESCE(blocks.height, -1)::integer AS block_height
+FROM transactions LEFT JOIN blocks ON (transactions.block_hash = blocks.hash)
+WHERE transactions.txid = $1
 `
 
 type GetTransactionByTxidRow struct {
-	Txid      types.Bytes
-	WitnessTx types.Bytes
-	Fee       int64
-	Rate      int64
-	BlockHash *types.Bytes
-	Index     sql.NullInt32
-	Version   int32
-	Locktime  int32
-	Size      int64
-	Height    int32
+	Txid        types.Bytes
+	WitnessTx   types.Bytes
+	Fee         int64
+	Rate        int64
+	BlockHash   *types.Bytes
+	Index       sql.NullInt32
+	Version     int32
+	Locktime    int32
+	Size        int64
+	BlockHeight int32
 }
 
 func (q *Queries) GetTransactionByTxid(ctx context.Context, txid types.Bytes) (GetTransactionByTxidRow, error) {
@@ -86,34 +88,47 @@ func (q *Queries) GetTransactionByTxid(ctx context.Context, txid types.Bytes) (G
 		&i.Version,
 		&i.Locktime,
 		&i.Size,
-		&i.Height,
+		&i.BlockHeight,
 	)
 	return i, err
 }
 
-const getTransactionsByBlockHash = `-- name: GetTransactionsByBlockHash :many
-SELECT txid, witness_tx, fee, rate, block_hash, index, version, locktime, size
-FROM transactions
-WHERE block_hash = $1
-ORDER BY index
+const getTransactionsByBlockHeight = `-- name: GetTransactionsByBlockHeight :many
+SELECT transactions.txid, transactions.witness_tx, transactions.fee, transactions.rate, transactions.block_hash, transactions.index, transactions.version, transactions.locktime, transactions.size, blocks.height AS block_height
+FROM transactions INNER JOIN blocks ON (transactions.block_hash = blocks.hash)
+WHERE blocks.height = $1
+ORDER BY transactions.block_hash
 LIMIT $2 OFFSET $3
 `
 
-type GetTransactionsByBlockHashParams struct {
-	BlockHash *types.Bytes
-	Limit     int32
-	Offset    int32
+type GetTransactionsByBlockHeightParams struct {
+	Height int32
+	Limit  int32
+	Offset int32
 }
 
-func (q *Queries) GetTransactionsByBlockHash(ctx context.Context, arg GetTransactionsByBlockHashParams) ([]Transaction, error) {
-	rows, err := q.db.QueryContext(ctx, getTransactionsByBlockHash, arg.BlockHash, arg.Limit, arg.Offset)
+type GetTransactionsByBlockHeightRow struct {
+	Txid        types.Bytes
+	WitnessTx   types.Bytes
+	Fee         int64
+	Rate        int64
+	BlockHash   *types.Bytes
+	Index       sql.NullInt32
+	Version     int32
+	Locktime    int32
+	Size        int64
+	BlockHeight int32
+}
+
+func (q *Queries) GetTransactionsByBlockHeight(ctx context.Context, arg GetTransactionsByBlockHeightParams) ([]GetTransactionsByBlockHeightRow, error) {
+	rows, err := q.db.QueryContext(ctx, getTransactionsByBlockHeight, arg.Height, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Transaction{}
+	items := []GetTransactionsByBlockHeightRow{}
 	for rows.Next() {
-		var i Transaction
+		var i GetTransactionsByBlockHeightRow
 		if err := rows.Scan(
 			&i.Txid,
 			&i.WitnessTx,
@@ -124,6 +139,7 @@ func (q *Queries) GetTransactionsByBlockHash(ctx context.Context, arg GetTransac
 			&i.Version,
 			&i.Locktime,
 			&i.Size,
+			&i.BlockHeight,
 		); err != nil {
 			return nil, err
 		}

@@ -34,7 +34,7 @@ func (r *Renderer) RenderDesc(d Desc) {
 		r.Write("string")
 	case *Boolean:
 		if dd.True && dd.False {
-			r.Write("bool")
+			r.Write("boolean")
 		} else if dd.True {
 			r.Write("true")
 		} else if dd.False {
