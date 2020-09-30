@@ -38,3 +38,6 @@ FROM blocks;
 -- name: DeleteBlocksAfterHeight :exec
 DELETE FROM blocks
 WHERE height > $1;
+
+-- name: DeleteMempool :exec
+DELETE FROM transactions WHERE block_hash IS NULL;

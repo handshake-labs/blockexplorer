@@ -62,5 +62,25 @@ type TxOutput struct {
 	CovenantAddress      types.Bytes       `json:"covenantAddress,omitempty"`
 	CovenantClaimHeight  types.Bytes       `json:"covenantClaimHeight,omitempty"`
 	CovenantRenewalCount types.Bytes       `json:"covenantRenewalCount,omitempty"`
-	Name                 types.Bytes       `json:"name,omitempty"`
+	Name                 string            `json:"name,omitempty"`
+}
+
+type ReservedName struct {
+	OriginName  types.Bytes `json:"originName"`
+	Name        string      `json:"name"`
+	NameHash    types.Bytes `json:"nameHash"`
+	ClaimAmount int64       `json:"claimAmount"`
+}
+
+type NameBid struct {
+	Txid        types.Bytes `json:"txid"`
+	BlockHeight int32       `json:"height"`
+	LockupValue int64       `json:"lockup"`
+	RevealValue int64       `json:"reveal"`
+}
+
+type NameRecord struct {
+	Txid        types.Bytes `json:"txid"`
+	BlockHeight int32       `json:"height"`
+	Data        types.Bytes `json:"data"`
 }

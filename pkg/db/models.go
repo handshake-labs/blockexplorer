@@ -59,8 +59,8 @@ type Block struct {
 }
 
 type ReservedName struct {
-	Name        types.Bytes
 	OriginName  types.Bytes
+	Name        string
 	NameHash    types.Bytes
 	ClaimAmount int64
 }

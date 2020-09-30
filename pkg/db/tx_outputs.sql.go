@@ -10,7 +10,7 @@ import (
 )
 
 const getTxOutputsByTxid = `-- name: GetTxOutputsByTxid :many
-SELECT DISTINCT ON(t1.index) t1.txid, t1.index, t1.value, t1.address, t1.covenant_action, t1.covenant_name_hash, t1.covenant_height, t1.covenant_name, t1.covenant_bid_hash, t1.covenant_nonce, t1.covenant_record_data, t1.covenant_block_hash, t1.covenant_version, t1.covenant_address, t1.covenant_claim_height, t1.covenant_renewal_count, t2.covenant_name AS name
+SELECT DISTINCT ON(t1.index) t1.txid, t1.index, t1.value, t1.address, t1.covenant_action, t1.covenant_name_hash, t1.covenant_height, t1.covenant_name, t1.covenant_bid_hash, t1.covenant_nonce, t1.covenant_record_data, t1.covenant_block_hash, t1.covenant_version, t1.covenant_address, t1.covenant_claim_height, t1.covenant_renewal_count, COALESCE(CONVERT_FROM(t2.covenant_name, 'SQL_ASCII'), '')::text AS name
 FROM tx_outputs t1 LEFT JOIN tx_outputs t2 ON (t1.covenant_name_hash = t2.covenant_name_hash AND t2.covenant_name IS NOT NULL)
 WHERE t1.txid = $1
 ORDER BY t1.index
@@ -33,7 +33,7 @@ type GetTxOutputsByTxidRow struct {
 	CovenantAddress      *types.Bytes
 	CovenantClaimHeight  *types.Bytes
 	CovenantRenewalCount *types.Bytes
-	Name                 *types.Bytes
+	Name                 string
 }
 
 func (q *Queries) GetTxOutputsByTxid(ctx context.Context, txid types.Bytes) ([]GetTxOutputsByTxidRow, error) {

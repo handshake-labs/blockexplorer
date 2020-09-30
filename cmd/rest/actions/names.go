@@ -5,336 +5,101 @@ import (
 
 	"github.com/handshake-labs/blockexplorer/pkg/db"
 	"github.com/handshake-labs/blockexplorer/pkg/types"
+	"github.com/jinzhu/copier"
 	"golang.org/x/crypto/sha3"
 )
 
-type GetListExpensiveParams struct {
-	Page int16 `json:"page"`
-}
-
-type GetListExpensiveResult struct {
-	NameRows []db.NameRow `json:"names"`
-	Count    int32        `json:"count"`
-	Limit    int16        `json:"limit"`
-}
-
-func GetListExpensive(ctx *Context, params *GetListExpensiveParams) (*GetListExpensiveResult, error) {
-	result := GetListExpensiveResult{}
-	result.Limit = 50
-
-	var page int16 = params.Page
-	if page < 0 {
-		page = 0
-	}
-
-	names, err := ctx.db.GetMostExpensiveNames(ctx, db.GetMostExpensiveNamesParams{
-		Limit:  result.Limit,
-		Offset: page * result.Limit,
-	})
-
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
-	}
-	result.NameRows = names
-	result.Count = names[0].Count
-	result.Limit = 50
-	return &result, nil
-}
-
-type GetListLockupVolumeParams struct {
-	Page int16 `json:"page"`
-}
-
-type GetListLockupVolumeResult struct {
-	NameRows []db.NameVolumeRow `json:"names"`
-	Count    int32              `json:"count"`
-	Limit    int16              `json:"limit"`
-}
-
-func GetListLockupVolume(ctx *Context, params *GetListLockupVolumeParams) (*GetListLockupVolumeResult, error) {
-	result := GetListLockupVolumeResult{}
-	result.Limit = 50
-
-	var page int16 = params.Page
-	if page < 0 {
-		page = 0
-	}
-
-	names, err := ctx.db.GetMostLockupVolumeNames(ctx, db.GetMostLockupVolumeNamesParams{
-		Limit:  result.Limit,
-		Offset: page * result.Limit,
-	})
-
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
-	}
-	result.NameRows = names
-	result.Count = names[0].Count
-	result.Limit = 50
-	return &result, nil
-}
-
-type GetListRevealVolumeParams struct {
-	Page int16 `json:"page"`
-}
-
-type GetListRevealVolumeResult struct {
-	NameRows []db.NameVolumeRow `json:"names"`
-	Count    int32              `json:"count"`
-	Limit    int16              `json:"limit"`
-}
-
-func GetListRevealVolume(ctx *Context, params *GetListRevealVolumeParams) (*GetListRevealVolumeResult, error) {
-	result := GetListRevealVolumeResult{}
-	result.Limit = 50
-
-	var page int16 = params.Page
-	if page < 0 {
-		page = 0
-	}
-
-	names, err := ctx.db.GetMostRevealVolumeNames(ctx, db.GetMostRevealVolumeNamesParams{
-		Limit:  result.Limit,
-		Offset: page * result.Limit,
-	})
-
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
-	}
-	result.NameRows = names
-	result.Count = names[0].Count
-	result.Limit = 50
-	return &result, nil
-}
-
-type GetListBidsParams struct {
-	Page int16 `json:"page"`
-}
-
-type GetListBidsResult struct {
-	NameRows []db.NameVolumeRow `json:"names"`
-	Count    int32              `json:"count"`
-	Limit    int16              `json:"limit"`
-}
-
-func GetListBids(ctx *Context, params *GetListBidsParams) (*GetListBidsResult, error) {
-	result := GetListBidsResult{}
-	result.Limit = 50
-
-	var page int16 = params.Page
-	if page < 0 {
-		page = 0
-	}
-
-	names, err := ctx.db.GetMostBidsNames(ctx, db.GetMostBidsNamesParams{
-		Limit:  result.Limit,
-		Offset: page * result.Limit,
-	})
-
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
-	}
-	result.NameRows = names
-	result.Count = names[0].Count
-	result.Limit = 50
-	return &result, nil
-}
-
-// type GetListTransfersParams struct {
-// 	Page int16 `json:"page"`
-// }
-//
-// type GetListTransfersResult struct {
-// 	NameRows []db.NameRow `json:"names"`
-// 	Count    int32        `json:"count"`
-// 	Limit    int16        `json:"limit"`
-// }
-//
-// func GetListTransfers(ctx *Context, params *GetListTransfersParams) (*GetListTransfersResult, error) {
-// 	result := GetListTransfersResult{}
-// 	result.Limit = 50
-//
-// 	var page int16 = params.Page
-// 	if page < 0 {
-// 		page = 0
-// 	}
-//
-// 	names, err := ctx.db.GetMostTransfersNames(ctx, db.GetMostTransfersNamesParams{
-// 		Limit:  result.Limit,
-// 		Offset: page * result.Limit,
-// 	})
-//
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return nil, nil
-// 		}
-// 		return nil, err
-// 	}
-// 	result.NameRows = names
-// 	result.Count = names[0].Count
-// 	result.Limit = 50
-// 	return &result, nil
-// }
-//
-
-type GetAuctionHistoryParams struct {
-	Page int16  `json:"page"`
-	Name string `json:"name"`
-}
-
-type GetAuctionHistoryParamsResult struct {
-	AuctionHistoryRows []db.AuctionHistoryRow `json:"history"`
-	Count              int16                  `json:"count"`
-	Limit              int16                  `json:"limit"`
-}
-
-func GetAuctionHistoryByName(ctx *Context, params *GetAuctionHistoryParams) (*GetAuctionHistoryParamsResult, error) {
-	result := GetAuctionHistoryParamsResult{}
-	result.Limit = 50
-	var page int16 = params.Page
-	if page < 0 {
-		page = 0
-	}
-
-	auctionRows, err := ctx.db.GetAuctionHistoryByName(ctx, db.GetAuctionHistoryByNameParams{
-		Name:   params.Name,
-		Limit:  result.Limit,
-		Offset: page * result.Limit,
-	})
-
-	if len(auctionRows) == 0 {
-		return &result, nil
-	}
-	// result.Count = int16(len(auctionRows))
-	result.Count = auctionRows[0].Count
-
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	result.AuctionHistoryRows = auctionRows
-	return &result, nil
-}
-
-type GetRecordsParams struct {
-	Name string `json:"name"`
-	Page int16  `json:"page"`
-}
-
-type GetRecordsParamsResult struct {
-	Records []db.RecordRow `json:"records"`
-	Count   int16          `json:"count"`
-	Limit   int16          `json:"limit"`
-}
-
-func GetRecordsByName(ctx *Context, params *GetRecordsParams) (*GetRecordsParamsResult, error) {
+func nameHash(name string) (types.Bytes, error) {
 	sha := sha3.New256()
-	sha.Write([]byte(params.Name))
-	nameHash := sha.Sum(nil)
-
-	result := GetRecordsParamsResult{}
-
-	result.Limit = 50
-	var page int16 = params.Page
-	if page < 0 {
-		page = 0
-	}
-
-	recordRows, err := ctx.db.GetNameRecordHistoryByNameHash(ctx, db.GetNameRecordHistoryByNameHashParams{
-		NameHash: nameHash,
-		Limit:    result.Limit,
-		Offset:   page * result.Limit,
-	})
+	_, err := sha.Write([]byte(name))
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
 		return nil, err
 	}
-	result.Records = recordRows
-	result.Count = recordRows[0].Count
-	result.Limit = 50
+	return types.Bytes(sha.Sum(nil)), nil
+}
+
+type GetNameParams struct {
+	Name string `json:"name"`
+}
+
+type GetNameResult struct {
+	ReservedName *ReservedName `json:"reserved,omitempty"`
+	BidsCount    int32         `json:"bids_count"`
+	RecordsCount int32         `json:"records_count"`
+}
+
+func GetName(ctx *Context, params *GetNameParams) (*GetNameResult, error) {
+	hash, err := nameHash(params.Name)
+	if err != nil {
+		return nil, err
+	}
+	counts, err := ctx.db.GetNameCountsByHash(ctx, hash)
+	if err != nil {
+		return nil, err
+	}
+	result := GetNameResult{nil, counts.BidsCount, counts.RecordsCount}
+	name, err := ctx.db.GetReservedName(ctx, params.Name)
+	if err == nil {
+		result.ReservedName = &ReservedName{}
+		copier.Copy(&result.ReservedName, &name)
+	} else if err != sql.ErrNoRows {
+		return nil, err
+	}
 	return &result, nil
 }
 
-type GetNameInfoParams struct {
-	Name string `json:"name"`
-	Page int16  `json:"page"`
+type GetNameBidsByHashParams struct {
+	Name   string `json:"name"`
+	Limit  int8   `json:"limit"`
+	Offset int32  `json:"offset"`
 }
 
-type GetNameInfoResult struct {
-	Reserved    bool                   `json:"reserved"`
-	Reservation db.ReservedName        `json:"reservation"`
-	Records     []db.RecordRow         `json:"records"`
-	Auction     []db.AuctionHistoryRow `json:"auction"`
-	Count       int16                  `json:"count"`
-	Limit       int16                  `json:"limit"`
+type GetNameBidsByHashResult struct {
+	NameBids []NameBid `json:"bids"`
 }
 
-func GetNameInfo(ctx *Context, params *GetNameInfoParams) (*GetNameInfoResult, error) {
-	sha := sha3.New256()
-	sha.Write([]byte(params.Name))
-	nameHash := sha.Sum(nil)
-
-	result := GetNameInfoResult{}
-
-	result.Limit = 50
-	var page int16 = params.Page
-	if page < 0 {
-		page = 0
+func GetNameBidsByHash(ctx *Context, params *GetNameBidsByHashParams) (*GetNameBidsByHashResult, error) {
+	hash, err := nameHash(params.Name)
+	if err != nil {
+		return nil, err
 	}
-
-	var reserved bool
-
-	reservation, err := ctx.db.CheckReservedName(ctx, types.Bytes(params.Name))
-	if err == sql.ErrNoRows {
-		reserved = false
-	} else {
-		reserved = true
+	bids, err := ctx.db.GetNameBidsByHash(ctx, db.GetNameBidsByHashParams{
+		NameHash: hash,
+		Limit:    int32(params.Limit),
+		Offset:   params.Offset,
+	})
+	if err != nil {
+		return nil, err
 	}
+	result := GetNameBidsByHashResult{}
+	copier.Copy(&result.NameBids, &bids)
+	return &result, nil
+}
 
-	result.Reserved = reserved
-	result.Reservation = reservation
+type GetNameRecordsByHashParams struct {
+	Name   string `json:"name"`
+	Limit  int8   `json:"limit"`
+	Offset int32  `json:"offset"`
+}
 
-	recordRows, err := ctx.db.GetNameRecordHistoryByNameHash(ctx, db.GetNameRecordHistoryByNameHashParams{
-		NameHash: nameHash,
-		Limit:    result.Limit,
-		Offset:   page * result.Limit,
+type GetNameRecordsByHashResult struct {
+	NameRecords []NameRecord `json:"records"`
+}
+
+func GetNameRecordsByHash(ctx *Context, params *GetNameRecordsByHashParams) (*GetNameRecordsByHashResult, error) {
+	hash, err := nameHash(params.Name)
+	if err != nil {
+		return nil, err
+	}
+	records, err := ctx.db.GetNameRecordsByHash(ctx, db.GetNameRecordsByHashParams{
+		NameHash: hash,
+		Limit:    int32(params.Limit),
+		Offset:   params.Offset,
 	})
-
-	auctionRows, err := ctx.db.GetAuctionHistoryByName(ctx, db.GetAuctionHistoryByNameParams{
-		Name:   params.Name,
-		Limit:  result.Limit,
-		Offset: page * result.Limit,
-	})
-
-	result.Auction = auctionRows
-
-	// log.Println(err)
-	// if err != nil {
-	// 	if err == sql.ErrNoRows {
-	// 		return nil, nil
-	// 	}
-	// 	return nil, err
-	// }
-	result.Records = recordRows
-	result.Count = int16(len(recordRows))
-	// result.Count = recordRows[0].Count
-	result.Limit = 50
+	if err != nil {
+		return nil, err
+	}
+	result := GetNameRecordsByHashResult{}
+	copier.Copy(&result.NameRecords, &records)
 	return &result, nil
 }

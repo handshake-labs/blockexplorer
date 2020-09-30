@@ -19,6 +19,15 @@ func (q *Queries) DeleteBlocksAfterHeight(ctx context.Context, height int32) err
 	return err
 }
 
+const deleteMempool = `-- name: DeleteMempool :exec
+DELETE FROM transactions WHERE block_hash IS NULL
+`
+
+func (q *Queries) DeleteMempool(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, deleteMempool)
+	return err
+}
+
 const getBlockByHash = `-- name: GetBlockByHash :one
 SELECT blocks.hash, blocks.height, blocks.weight, blocks.size, blocks.version, blocks.hash_merkle_root, blocks.witness_root, blocks.tree_root, blocks.reserved_root, blocks.mask, blocks.time, blocks.bits, blocks.difficulty, blocks.chainwork, blocks.nonce, blocks.extra_nonce, blocks.orphan, (
   SELECT COUNT(*) FROM transactions WHERE blocks.hash = transactions.block_hash
