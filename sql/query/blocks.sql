@@ -3,21 +3,26 @@ INSERT INTO blocks (hash, height, weight, size, version, hash_merkle_root, witne
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16);
 
 -- name: GetBlocks :many
-SELECT blocks.*, COUNT(transactions.txid)::integer AS txs_count
-FROM blocks INNER JOIN transactions ON (blocks.hash = transactions.block_hash)
-GROUP BY blocks.hash
+SELECT blocks.*, (
+  SELECT COUNT(*) FROM transactions WHERE blocks.hash = transactions.block_hash
+)::integer AS txs_count
+FROM blocks
 ORDER BY height DESC
 LIMIT $1 OFFSET $2;
 
 -- name: GetBlockByHash :one
-SELECT blocks.*, COUNT(transactions.txid)::integer AS txs_count
-FROM blocks INNER JOIN transactions ON (blocks.hash = transactions.block_hash)
+SELECT blocks.*, (
+  SELECT COUNT(*) FROM transactions WHERE blocks.hash = transactions.block_hash
+)::integer AS txs_count
+FROM blocks
 WHERE blocks.hash = $1
 GROUP BY blocks.hash;
 
 -- name: GetBlockByHeight :one
-SELECT blocks.*, COUNT(transactions.txid)::integer AS txs_count
-FROM blocks INNER JOIN transactions ON (blocks.hash = transactions.block_hash)
+SELECT blocks.*, (
+  SELECT COUNT(*) FROM transactions WHERE blocks.hash = transactions.block_hash
+)::integer AS txs_count
+FROM blocks
 WHERE blocks.height = $1
 GROUP BY blocks.hash;
 
