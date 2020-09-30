@@ -102,5 +102,4 @@ type TxOutput struct {
 	CovenantAddress      *types.Bytes
 	CovenantClaimHeight  *types.Bytes
 	CovenantRenewalCount *types.Bytes
-	Name                 *types.Bytes
 }

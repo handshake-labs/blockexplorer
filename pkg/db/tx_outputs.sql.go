@@ -10,19 +10,41 @@ import (
 )
 
 const getTxOutputsByTxid = `-- name: GetTxOutputsByTxid :many
-SELECT txid, index, value, address, covenant_action, tx_outputs.covenant_name_hash, covenant_height, tx_outputs.covenant_name, covenant_bid_hash, covenant_nonce, covenant_record_data, covenant_block_hash, covenant_version, covenant_address, covenant_claim_height, covenant_renewal_count, namehash.covenant_name as name FROM tx_outputs LEFT JOIN namehash ON tx_outputs.covenant_name_hash = namehash.covenant_name_hash WHERE "txid" = $1
-ORDER BY index
+SELECT DISTINCT ON(t1.index) t1.txid, t1.index, t1.value, t1.address, t1.covenant_action, t1.covenant_name_hash, t1.covenant_height, t1.covenant_name, t1.covenant_bid_hash, t1.covenant_nonce, t1.covenant_record_data, t1.covenant_block_hash, t1.covenant_version, t1.covenant_address, t1.covenant_claim_height, t1.covenant_renewal_count, t2.covenant_name AS name
+FROM tx_outputs t1 LEFT JOIN tx_outputs t2 ON (t1.covenant_name_hash = t2.covenant_name_hash AND t2.covenant_name IS NOT NULL)
+WHERE t1.txid = $1
+ORDER BY t1.index
 `
 
-func (q *Queries) GetTxOutputsByTxid(ctx context.Context, txid types.Bytes) ([]TxOutput, error) {
+type GetTxOutputsByTxidRow struct {
+	Txid                 types.Bytes
+	Index                int32
+	Value                int64
+	Address              string
+	CovenantAction       CovenantAction
+	CovenantNameHash     *types.Bytes
+	CovenantHeight       *types.Bytes
+	CovenantName         *types.Bytes
+	CovenantBidHash      *types.Bytes
+	CovenantNonce        *types.Bytes
+	CovenantRecordData   *types.Bytes
+	CovenantBlockHash    *types.Bytes
+	CovenantVersion      *types.Bytes
+	CovenantAddress      *types.Bytes
+	CovenantClaimHeight  *types.Bytes
+	CovenantRenewalCount *types.Bytes
+	Name                 *types.Bytes
+}
+
+func (q *Queries) GetTxOutputsByTxid(ctx context.Context, txid types.Bytes) ([]GetTxOutputsByTxidRow, error) {
 	rows, err := q.db.QueryContext(ctx, getTxOutputsByTxid, txid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []TxOutput{}
+	items := []GetTxOutputsByTxidRow{}
 	for rows.Next() {
-		var i TxOutput
+		var i GetTxOutputsByTxidRow
 		if err := rows.Scan(
 			&i.Txid,
 			&i.Index,
@@ -377,10 +399,6 @@ type InsertTxOutputParams struct {
 	CovenantRenewalCount *types.Bytes
 }
 
-// -- name: GetTxOutputsByTxid :many
-// SELECT tx_outputs.*, namehash.covenant_name FROM tx_outputs, namehash WHERE tx_outputs.covenant_name_hash = namehash.covenant_name_hash AND tx_outputs.txid = $1
-// ORDER BY index;
-//
 func (q *Queries) InsertTxOutput(ctx context.Context, arg InsertTxOutputParams) error {
 	_, err := q.db.ExecContext(ctx, insertTxOutput,
 		arg.Txid,

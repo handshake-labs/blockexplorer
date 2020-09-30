@@ -62,5 +62,5 @@ type TxOutput struct {
 	CovenantAddress      types.Bytes       `json:"covenantAddress,omitempty"`
 	CovenantClaimHeight  types.Bytes       `json:"covenantClaimHeight,omitempty"`
 	CovenantRenewalCount types.Bytes       `json:"covenantRenewalCount,omitempty"`
-	Name                 string            `json:"name,omitempty"`
+	Name                 types.Bytes       `json:"name,omitempty"`
 }
