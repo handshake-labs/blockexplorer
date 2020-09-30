@@ -13,15 +13,15 @@ const getNameBidsByHash = `-- name: GetNameBidsByHash :many
 SELECT
   transactions.txid AS txid,
   COALESCE(blocks.height, -1)::integer AS block_height,
-  lockups.value AS lockup_value,
-  reveals.value AS reveal_value
+  COALESCE(lockups.value, -1)::integer AS lockup_value,
+  COALESCE(reveals.value, -1)::integer AS reveal_value
 FROM
   tx_outputs lockups
   INNER JOIN transactions ON (lockups.txid = transactions.txid)
   LEFT JOIN blocks ON (transactions.block_hash = blocks.hash)
-  LEFT JOIN tx_outputs reveals ON (lockups.covenant_name_hash = reveals.covenant_name_hash AND lockups.address = reveals.address)
+  LEFT JOIN tx_outputs reveals ON (reveals.covenant_action = 'REVEAL' AND lockups.covenant_name_hash = reveals.covenant_name_hash AND lockups.address = reveals.address)
   LEFT JOIN tx_inputs ON (reveals.txid = tx_inputs.txid AND lockups.index = tx_inputs.index)
-WHERE lockups.covenant_action = 'BID' AND reveals.covenant_action = 'REVEAL' AND lockups.covenant_name_hash = $1::bytea
+WHERE lockups.covenant_action = 'BID' AND lockups.covenant_name_hash = $1::bytea
 ORDER BY (blocks.height, transactions.index, lockups.index) DESC NULLS FIRST
 LIMIT $3::integer OFFSET $2::integer
 `
@@ -35,8 +35,8 @@ type GetNameBidsByHashParams struct {
 type GetNameBidsByHashRow struct {
 	Txid        types.Bytes
 	BlockHeight int32
-	LockupValue int64
-	RevealValue int64
+	LockupValue int32
+	RevealValue int32
 }
 
 func (q *Queries) GetNameBidsByHash(ctx context.Context, arg GetNameBidsByHashParams) ([]GetNameBidsByHashRow, error) {

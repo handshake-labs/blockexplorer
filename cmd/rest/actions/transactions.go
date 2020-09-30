@@ -28,7 +28,7 @@ func GetTransactionsByBlockHeight(ctx *Context, params *GetTransactionsByBlockHe
 	if len(transactions) == 0 {
 		return nil, err
 	}
-	result := GetTransactionsByBlockHeightResult{}
+	result := GetTransactionsByBlockHeightResult{[]Transaction{}}
 	for _, transaction := range transactions {
 		txInputs, err := ctx.db.GetTxInputsByTxid(ctx, transaction.Txid)
 		if err != nil {

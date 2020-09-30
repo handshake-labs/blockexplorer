@@ -71,7 +71,7 @@ func GetNameBidsByHash(ctx *Context, params *GetNameBidsByHashParams) (*GetNameB
 	if err != nil {
 		return nil, err
 	}
-	result := GetNameBidsByHashResult{}
+	result := GetNameBidsByHashResult{[]NameBid{}}
 	copier.Copy(&result.NameBids, &bids)
 	return &result, nil
 }
@@ -99,7 +99,7 @@ func GetNameRecordsByHash(ctx *Context, params *GetNameRecordsByHashParams) (*Ge
 	if err != nil {
 		return nil, err
 	}
-	result := GetNameRecordsByHashResult{}
+	result := GetNameRecordsByHashResult{[]NameRecord{}}
 	copier.Copy(&result.NameRecords, &records)
 	return &result, nil
 }

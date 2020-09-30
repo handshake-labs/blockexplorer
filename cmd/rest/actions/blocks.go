@@ -30,8 +30,7 @@ func GetBlocks(ctx *Context, params *GetBlocksParams) (*GetBlocksResult, error) 
 	if err != nil {
 		return nil, err
 	}
-	result := GetBlocksResult{}
-	result.Count = height + 1
+	result := GetBlocksResult{[]Block{}, height + 1}
 	copier.Copy(&result.Blocks, &blocks)
 	return &result, nil
 }

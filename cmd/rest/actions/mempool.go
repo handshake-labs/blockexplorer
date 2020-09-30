@@ -22,7 +22,7 @@ func GetMempoolTxs(ctx *Context, params *GetMempoolTxsParams) (*GetMempoolTxsRes
 	if err != nil {
 		return nil, err
 	}
-	result := GetMempoolTxsResult{}
+	result := GetMempoolTxsResult{[]Transaction{}}
 	for _, transaction := range transactions {
 		txInputs, err := ctx.db.GetTxInputsByTxid(ctx, transaction.Txid)
 		if err != nil {
