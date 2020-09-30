@@ -44,6 +44,7 @@ go run services/blocks_sync/*.go
 TODOS:
 - check what happens if the node stops and has to resync from block 0. will the sync and the db be ok?
 - parse the record data
+- add icann restricted names
 
 
 Docker build

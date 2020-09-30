@@ -2,3 +2,4 @@
 *.swo
 cmd/my/*
 vendor/
+*tmp/
