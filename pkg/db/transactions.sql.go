@@ -97,7 +97,7 @@ const getTransactionsByBlockHeight = `-- name: GetTransactionsByBlockHeight :man
 SELECT transactions.txid, transactions.witness_tx, transactions.fee, transactions.rate, transactions.block_hash, transactions.index, transactions.version, transactions.locktime, transactions.size, blocks.height AS block_height
 FROM transactions INNER JOIN blocks ON (transactions.block_hash = blocks.hash)
 WHERE blocks.height = $1
-ORDER BY transactions.block_hash
+ORDER BY transactions.index
 LIMIT $2 OFFSET $3
 `
 

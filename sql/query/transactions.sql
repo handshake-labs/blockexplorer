@@ -11,7 +11,7 @@ WHERE transactions.txid = $1;
 SELECT transactions.*, blocks.height AS block_height
 FROM transactions INNER JOIN blocks ON (transactions.block_hash = blocks.hash)
 WHERE blocks.height = $1
-ORDER BY transactions.block_hash
+ORDER BY transactions.index
 LIMIT $2 OFFSET $3;
 
 -- name: GetMempoolTransactions :many
