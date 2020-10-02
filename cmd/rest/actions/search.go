@@ -13,14 +13,14 @@ type SearchParams struct {
 }
 
 type SearchResult struct {
-	Transactions []string `json:"transactions"`
-	Blocks       []int32  `json:"blocks"`
-	Names        []string `json:"names"`
+	Transaction string `json:"transactions"`
+	BlockHeight int32  `json:"block"`
+	Name        string `json:"name"`
 }
 
 func Search(ctx *Context, params *SearchParams) (*SearchResult, error) {
-	var txs, names []string
-	var blocks []int32
+	var tx, name string
+	var blockHeight int32
 	var result SearchResult
 	query := params.Query
 	if len(query) == 64 {
@@ -28,26 +28,24 @@ func Search(ctx *Context, params *SearchParams) (*SearchResult, error) {
 			hexString := types.Bytes(hash)
 			//check if it's a transaction hash, if there is such a tx, then redirect there, otherwise give a name result
 			if _, err := ctx.db.GetTransactionByTxid(ctx, hexString); err != sql.ErrNoRows {
-				txs = append(txs, query)
+				tx = query
 			}
 			//check if it's a block hash, if there is a block of such hash, redirect there, otherwsie give a name resulkt
 			if block, err := ctx.db.GetBlockByHash(ctx, hexString); err != sql.ErrNoRows {
-				blocks = append(blocks, (block.Height))
+				blockHeight = block.Height
 			}
 		}
 	}
-
 	if height, err := strconv.Atoi(query); err == nil {
 		//otherwise check if it's a string of ints, therefore it's a block
-		blocks = append(blocks, int32(height))
+		blockHeight = int32(height)
 	}
-
 	punycoded_name, err := idna.ToASCII(query)
 	if err == nil {
-		names = append(names, string(punycoded_name))
+		name = string(punycoded_name)
 	}
-	result.Blocks = blocks
-	result.Transactions = txs
-	result.Names = names
+	result.BlockHeight = blockHeight
+	result.Transaction = tx
+	result.Name = name
 	return &result, nil
 }

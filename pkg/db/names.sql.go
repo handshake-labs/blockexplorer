@@ -9,6 +9,31 @@ import (
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 )
 
+const getLastHeightByActionByHash = `-- name: GetLastHeightByActionByHash :one
+select
+blocks.height
+from tx_outputs, blocks, transactions
+where
+covenant_action = $1
+and covenant_name_hash = $2
+and tx_outputs.txid = transactions.txid
+and transactions.block_hash = blocks.hash
+order by height
+desc limit 1
+`
+
+type GetLastHeightByActionByHashParams struct {
+	CovenantAction   CovenantAction
+	CovenantNameHash *types.Bytes
+}
+
+func (q *Queries) GetLastHeightByActionByHash(ctx context.Context, arg GetLastHeightByActionByHashParams) (int, error) {
+	row := q.db.QueryRowContext(ctx, getLastHeightByActionByHash, arg.CovenantAction, arg.CovenantNameHash)
+	var height int
+	err := row.Scan(&height)
+	return height, err
+}
+
 const getNameBidsByHash = `-- name: GetNameBidsByHash :many
 SELECT
   transactions.txid AS txid,

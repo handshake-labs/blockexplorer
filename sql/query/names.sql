@@ -38,3 +38,16 @@ FROM
 WHERE tx_outputs.covenant_record_data IS NOT NULL AND tx_outputs.covenant_name_hash = sqlc.arg('name_hash')::bytea
 ORDER BY (blocks.height, transactions.index, tx_outputs.index) DESC NULLS FIRST
 LIMIT sqlc.arg('limit')::integer OFFSET sqlc.arg('offset')::integer;
+
+
+-- name: GetLastHeightByActionByHash :one
+select
+blocks.height
+from tx_outputs, blocks, transactions
+where
+covenant_action = $1
+and covenant_name_hash = $2
+and tx_outputs.txid = transactions.txid
+and transactions.block_hash = blocks.hash
+order by height
+desc limit 1;

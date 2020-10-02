@@ -50,10 +50,6 @@ func syncBlocks(pg *sql.DB, nc *node.Client) error {
 	if err != nil {
 		return err
 	}
-	if height < maxHeight {
-		q := db.New(pg)
-		defer q.RefreshViews(context.Background())
-	}
 	for height < maxHeight {
 		height += 1
 		block, err := nc.GetBlockByHeight(context.Background(), height)
