@@ -84,3 +84,12 @@ type NameRecord struct {
 	BlockHeight int32       `json:"height"`
 	Data        types.Bytes `json:"data"`
 }
+
+type AuctionState string
+
+const (
+	AuctionStateClosed AuctionState = "CLOSED"
+	AuctionStateOpen   AuctionState = "OPEN"
+	AuctionStateBid    AuctionState = "BID"
+	AuctionStateReveal AuctionState = "REVEAL"
+)

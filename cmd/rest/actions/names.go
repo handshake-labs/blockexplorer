@@ -9,6 +9,9 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
+const treeInterval = 36
+const blocksPerDay = 144
+
 func nameHash(name string) (types.Bytes, error) {
 	sha := sha3.New256()
 	_, err := sha.Write([]byte(name))
@@ -38,36 +41,44 @@ type GetNameResult struct {
 	ReleaseBlock int           `json:"release_block"`
 	BidsCount    int32         `json:"bids_count"`
 	RecordsCount int32         `json:"records_count"`
-	State        string        `json:"state"`
+	State        State         `json:"state"`
+}
+
+type State struct {
+	OpenHeight      int          `json:"open_height"`
+	CurrentState    AuctionState `json:"current_state"`
+	AuctionComplete bool         `json:"auction_completed"`
 }
 
 //get state of the name relative to the block
-func getStateByName(ctx *Context, height int, name string) string {
+//if the auctiobn has not concludedm then name can be opened again after TreeInterval is elapsed
+func getStateByName(ctx *Context, height int, name string) State {
 	nameHash, _ := nameHash(name)
 	openHeightParams := db.GetLastHeightByActionByHashParams{db.CovenantAction("OPEN"), &nameHash}
 	openHeight, err := ctx.db.GetLastHeightByActionByHash(ctx, openHeightParams)
-	if err != sql.ErrNoRows {
-		return "Auction has not opened."
+	if err == sql.ErrNoRows {
+		return State{-1, AuctionStateClosed, false}
 	}
-	if openHeight+17 <= height {
-		return "Auction is opening."
+	if openHeight+treeInterval >= height {
+		return State{openHeight, AuctionStateOpen, false}
 	}
-	if openHeight+17+144*5 >= height {
-		return "Auction is in bid state."
+	if openHeight+treeInterval+blocksPerDay*5 >= height {
+		return State{openHeight, AuctionStateBid, false}
 	}
-	if openHeight+17+144*15 >= height {
-		return "Auction is in reveal state."
+	if openHeight+treeInterval+blocksPerDay*15 >= height {
+		return State{openHeight, AuctionStateReveal, false}
 	}
-	// openHeight += 2
 	revealHeightParams := db.GetLastHeightByActionByHashParams{db.CovenantAction("REVEAL"), &nameHash}
 	_, err = ctx.db.GetLastHeightByActionByHash(ctx, revealHeightParams)
 	if err != sql.ErrNoRows {
-		return "Auction has been finished."
+		return State{openHeight, AuctionStateClosed, true}
 	}
 	if err == sql.ErrNoRows {
-		return "Auction has not been concluded. New auction can be opened at block " + string(openHeight+17+144*15+144*10) + "."
+		return State{openHeight, AuctionStateClosed, false}
 	}
-	return "Error"
+	claimHeightParams := db.GetLastHeightByActionByHashParams{db.CovenantAction("CLAIM"), &nameHash}
+	_, err = ctx.db.GetLastHeightByActionByHash(ctx, claimHeightParams)
+	return State{}
 }
 
 func GetName(ctx *Context, params *GetNameParams) (*GetNameResult, error) {
@@ -149,5 +160,5 @@ func GetNameRecordsByHash(ctx *Context, params *GetNameRecordsByHashParams) (*Ge
 
 func ReleaseBlock(name string) int {
 	hash, _ := nameHash(name)
-	return modulo([]byte(hash), 52)*144*7 + 2016
+	return modulo([]byte(hash), 52)*blocksPerDay*7 + 2016
 }
