@@ -14,8 +14,8 @@ WHERE covenant_name_hash = sqlc.arg('name_hash')::bytea;
 SELECT
   transactions.txid AS txid,
   COALESCE(blocks.height, -1)::integer AS block_height,
-  COALESCE(lockups.value, -1)::integer AS lockup_value,
-  COALESCE(reveals.value, -1)::integer AS reveal_value
+  lockups.value AS lockup_value,
+  COALESCE(reveals.value, -1)::bigint AS reveal_value
 FROM
   tx_outputs lockups
   INNER JOIN transactions ON (lockups.txid = transactions.txid)

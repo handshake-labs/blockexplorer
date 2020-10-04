@@ -1,6 +1,8 @@
 package actions
 
 import (
+	"database/sql"
+
 	"github.com/handshake-labs/blockexplorer/pkg/db"
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 	"github.com/jinzhu/copier"
@@ -56,6 +58,9 @@ type GetTransactionByTxidResult Transaction
 func GetTransactionByTxid(ctx *Context, params *GetTransactionByTxidParams) (*GetTransactionByTxidResult, error) {
 	transaction, err := ctx.db.GetTransactionByTxid(ctx, params.Txid)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		return nil, err
 	}
 	txInputs, err := ctx.db.GetTxInputsByTxid(ctx, transaction.Txid)

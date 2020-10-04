@@ -3,9 +3,10 @@ package actions
 import (
 	"database/sql"
 	"encoding/hex"
+	"strconv"
+
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 	"golang.org/x/net/idna"
-	"strconv"
 )
 
 type SearchParams struct {
@@ -13,7 +14,7 @@ type SearchParams struct {
 }
 
 type SearchResult struct {
-	Transaction string `json:"transactions"`
+	Transaction string `json:"transaction"`
 	BlockHeight int32  `json:"block"`
 	Name        string `json:"name"`
 }
