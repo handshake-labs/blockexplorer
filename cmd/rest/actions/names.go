@@ -57,7 +57,7 @@ func getStateByName(ctx *Context, height int32, name string) State {
 	openHeightParams := db.GetLastNameBlockHeightByActionAndHashParams{db.CovenantAction("OPEN"), &nameHash}
 	openHeight, err := ctx.db.GetLastNameBlockHeightByActionAndHash(ctx, openHeightParams)
 	if err == sql.ErrNoRows || openHeight == -1 {
-		return State{-1, AuctionStateClosed, false}
+		return State{openHeight, AuctionStateClosed, false}
 	}
 	if openHeight+treeInterval >= height {
 		return State{openHeight, AuctionStateOpen, false}
@@ -72,6 +72,9 @@ func getStateByName(ctx *Context, height int32, name string) State {
 	_, err = ctx.db.GetLastNameBlockHeightByActionAndHash(ctx, revealHeightParams)
 	if err != sql.ErrNoRows {
 		return State{openHeight, AuctionStateClosed, true}
+	}
+	if err == sql.ErrNoRows {
+		return State{openHeight, AuctionStateClosed, false}
 	}
 	claimHeightParams := db.GetLastNameBlockHeightByActionAndHashParams{db.CovenantAction("CLAIM"), &nameHash}
 	_, err = ctx.db.GetLastNameBlockHeightByActionAndHash(ctx, claimHeightParams)
