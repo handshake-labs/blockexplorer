@@ -27,9 +27,9 @@ type GetLastHeightByActionByHashParams struct {
 	CovenantNameHash *types.Bytes
 }
 
-func (q *Queries) GetLastHeightByActionByHash(ctx context.Context, arg GetLastHeightByActionByHashParams) (int, error) {
+func (q *Queries) GetLastHeightByActionByHash(ctx context.Context, arg GetLastHeightByActionByHashParams) (int32, error) {
 	row := q.db.QueryRowContext(ctx, getLastHeightByActionByHash, arg.CovenantAction, arg.CovenantNameHash)
-	var height int
+	var height int32
 	err := row.Scan(&height)
 	return height, err
 }
@@ -38,8 +38,8 @@ const getNameBidsByHash = `-- name: GetNameBidsByHash :many
 SELECT
   transactions.txid AS txid,
   COALESCE(blocks.height, -1)::integer AS block_height,
-  COALESCE(lockups.value, -1)::integer AS lockup_value,
-  COALESCE(reveals.value, -1)::integer AS reveal_value
+  lockups.value AS lockup_value,
+  COALESCE(reveals.value, -1)::bigint AS reveal_value
 FROM
   tx_outputs lockups
   INNER JOIN transactions ON (lockups.txid = transactions.txid)
@@ -60,8 +60,8 @@ type GetNameBidsByHashParams struct {
 type GetNameBidsByHashRow struct {
 	Txid        types.Bytes
 	BlockHeight int32
-	LockupValue int32
-	RevealValue int32
+	LockupValue int64
+	RevealValue int64
 }
 
 func (q *Queries) GetNameBidsByHash(ctx context.Context, arg GetNameBidsByHashParams) ([]GetNameBidsByHashRow, error) {

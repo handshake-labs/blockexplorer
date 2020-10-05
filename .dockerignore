@@ -1,6 +1,6 @@
-*
-!pkg
-!services
-!cmd
+# *
+# !pkg
+# !services
+# !cmd
 # !vendor
-# tmp/
+tmp/

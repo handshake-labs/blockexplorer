@@ -45,19 +45,19 @@ type GetNameResult struct {
 }
 
 type State struct {
-	OpenHeight      int          `json:"open_height"`
+	OpenHeight      int32        `json:"open_height,omitempty"`
 	CurrentState    AuctionState `json:"current_state"`
 	AuctionComplete bool         `json:"auction_completed"`
 }
 
 //get state of the name relative to the block
 //if the auctiobn has not concludedm then name can be opened again after TreeInterval is elapsed
-func getStateByName(ctx *Context, height int, name string) State {
+func getStateByName(ctx *Context, height int32, name string) State {
 	nameHash, _ := nameHash(name)
 	openHeightParams := db.GetLastHeightByActionByHashParams{db.CovenantAction("OPEN"), &nameHash}
 	openHeight, err := ctx.db.GetLastHeightByActionByHash(ctx, openHeightParams)
 	if err == sql.ErrNoRows {
-		return State{-1, AuctionStateClosed, false}
+		return State{openHeight, AuctionStateClosed, false}
 	}
 	if openHeight+treeInterval >= height {
 		return State{openHeight, AuctionStateOpen, false}
@@ -91,7 +91,7 @@ func GetName(ctx *Context, params *GetNameParams) (*GetNameResult, error) {
 		return nil, err
 	}
 	height, _ := ctx.db.GetBlocksMaxHeight(ctx)
-	result := GetNameResult{nil, ReleaseBlock(params.Name), counts.BidsCount, counts.RecordsCount, getStateByName(ctx, int(height), params.Name)}
+	result := GetNameResult{nil, ReleaseBlock(params.Name), counts.BidsCount, counts.RecordsCount, getStateByName(ctx, height, params.Name)}
 	name, err := ctx.db.GetReservedName(ctx, params.Name)
 	if err == nil {
 		result.ReservedName = &ReservedName{}
