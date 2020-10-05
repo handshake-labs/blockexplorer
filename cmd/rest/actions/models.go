@@ -29,7 +29,7 @@ type Block struct {
 
 type Transaction struct {
 	Txid        types.Bytes `json:"txid"`
-	BlockHeight int32       `json:"block_height"`
+	BlockHeight *int32      `json:"block_height"`
 	WitnessTx   types.Bytes `json:"witnessTx"`
 	Fee         int64       `json:"fee"`
 	Rate        int64       `json:"rate"`
@@ -74,14 +74,14 @@ type ReservedName struct {
 
 type NameBid struct {
 	Txid        types.Bytes `json:"txid"`
-	BlockHeight int32       `json:"height"`
+	BlockHeight *int32      `json:"height"`
 	LockupValue int64       `json:"lockup"`
-	RevealValue int64       `json:"reveal"`
+	RevealValue *int64      `json:"reveal"`
 }
 
 type NameRecord struct {
 	Txid        types.Bytes `json:"txid"`
-	BlockHeight int32       `json:"height"`
+	BlockHeight *int32      `json:"height"`
 	Data        types.Bytes `json:"data"`
 }
 

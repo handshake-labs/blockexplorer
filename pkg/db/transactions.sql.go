@@ -10,6 +10,16 @@ import (
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 )
 
+const deleteMempool = `-- name: DeleteMempool :exec
+DELETE FROM transactions
+WHERE block_hash IS NULL
+`
+
+func (q *Queries) DeleteMempool(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, deleteMempool)
+	return err
+}
+
 const getMempoolTransactions = `-- name: GetMempoolTransactions :many
 SELECT txid, witness_tx, fee, rate, block_hash, index, version, locktime, size
 FROM transactions
@@ -57,22 +67,25 @@ func (q *Queries) GetMempoolTransactions(ctx context.Context, arg GetMempoolTran
 }
 
 const getTransactionByTxid = `-- name: GetTransactionByTxid :one
-SELECT transactions.txid, transactions.witness_tx, transactions.fee, transactions.rate, transactions.block_hash, transactions.index, transactions.version, transactions.locktime, transactions.size, COALESCE(blocks.height, -1)::integer AS block_height
-FROM transactions LEFT JOIN blocks ON (transactions.block_hash = blocks.hash)
+SELECT
+  transactions.txid, transactions.witness_tx, transactions.fee, transactions.rate, transactions.block_hash, transactions.index, transactions.version, transactions.locktime, transactions.size,
+  COALESCE(blocks.height, -1)::integer AS block_height_not_null
+FROM transactions
+  LEFT JOIN blocks ON (transactions.block_hash = blocks.hash)
 WHERE transactions.txid = $1
 `
 
 type GetTransactionByTxidRow struct {
-	Txid        types.Bytes
-	WitnessTx   types.Bytes
-	Fee         int64
-	Rate        int64
-	BlockHash   *types.Bytes
-	Index       sql.NullInt32
-	Version     int32
-	Locktime    int32
-	Size        int64
-	BlockHeight int32
+	Txid               types.Bytes
+	WitnessTx          types.Bytes
+	Fee                int64
+	Rate               int64
+	BlockHash          *types.Bytes
+	Index              sql.NullInt32
+	Version            int32
+	Locktime           int32
+	Size               int64
+	BlockHeightNotNull int32
 }
 
 func (q *Queries) GetTransactionByTxid(ctx context.Context, txid types.Bytes) (GetTransactionByTxidRow, error) {
@@ -88,14 +101,18 @@ func (q *Queries) GetTransactionByTxid(ctx context.Context, txid types.Bytes) (G
 		&i.Version,
 		&i.Locktime,
 		&i.Size,
-		&i.BlockHeight,
+		&i.BlockHeightNotNull,
 	)
 	return i, err
 }
 
 const getTransactionsByBlockHeight = `-- name: GetTransactionsByBlockHeight :many
-SELECT transactions.txid, transactions.witness_tx, transactions.fee, transactions.rate, transactions.block_hash, transactions.index, transactions.version, transactions.locktime, transactions.size, blocks.height AS block_height
-FROM transactions INNER JOIN blocks ON (transactions.block_hash = blocks.hash)
+SELECT
+  transactions.txid, transactions.witness_tx, transactions.fee, transactions.rate, transactions.block_hash, transactions.index, transactions.version, transactions.locktime, transactions.size,
+  COALESCE(blocks.height, -1)::integer AS block_height_not_null
+FROM
+  transactions
+  INNER JOIN blocks ON (transactions.block_hash = blocks.hash)
 WHERE blocks.height = $1
 ORDER BY transactions.index
 LIMIT $2 OFFSET $3
@@ -108,16 +125,16 @@ type GetTransactionsByBlockHeightParams struct {
 }
 
 type GetTransactionsByBlockHeightRow struct {
-	Txid        types.Bytes
-	WitnessTx   types.Bytes
-	Fee         int64
-	Rate        int64
-	BlockHash   *types.Bytes
-	Index       sql.NullInt32
-	Version     int32
-	Locktime    int32
-	Size        int64
-	BlockHeight int32
+	Txid               types.Bytes
+	WitnessTx          types.Bytes
+	Fee                int64
+	Rate               int64
+	BlockHash          *types.Bytes
+	Index              sql.NullInt32
+	Version            int32
+	Locktime           int32
+	Size               int64
+	BlockHeightNotNull int32
 }
 
 func (q *Queries) GetTransactionsByBlockHeight(ctx context.Context, arg GetTransactionsByBlockHeightParams) ([]GetTransactionsByBlockHeightRow, error) {
@@ -139,7 +156,7 @@ func (q *Queries) GetTransactionsByBlockHeight(ctx context.Context, arg GetTrans
 			&i.Version,
 			&i.Locktime,
 			&i.Size,
-			&i.BlockHeight,
+			&i.BlockHeightNotNull,
 		); err != nil {
 			return nil, err
 		}
@@ -156,7 +173,7 @@ func (q *Queries) GetTransactionsByBlockHeight(ctx context.Context, arg GetTrans
 
 const insertTransaction = `-- name: InsertTransaction :exec
 INSERT INTO transactions (txid, witness_tx, fee, rate, block_hash, index, "version", locktime, "size")
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 `
 
 type InsertTransactionParams struct {

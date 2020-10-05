@@ -9,37 +9,36 @@ import (
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 )
 
-const getLastHeightByActionByHash = `-- name: GetLastHeightByActionByHash :one
-select
-blocks.height
-from tx_outputs, blocks, transactions
-where
-covenant_action = $1
-and covenant_name_hash = $2
-and tx_outputs.txid = transactions.txid
-and transactions.block_hash = blocks.hash
-order by height
-desc limit 1
+const getLastNameBlockHeightByActionAndHash = `-- name: GetLastNameBlockHeightByActionAndHash :one
+SELECT
+  COALESCE(blocks.height, -1)::integer AS block_height_not_null
+FROM
+  tx_outputs
+  INNER JOIN transactions ON (tx_outputs.txid = transactions.txid)
+  LEFT JOIN blocks ON (transactions.block_hash = blocks.hash)
+WHERE covenant_action = $1 AND covenant_name_hash = $2
+ORDER BY blocks.height DESC NULLS FIRST
+LIMIT 1
 `
 
-type GetLastHeightByActionByHashParams struct {
+type GetLastNameBlockHeightByActionAndHashParams struct {
 	CovenantAction   CovenantAction
 	CovenantNameHash *types.Bytes
 }
 
-func (q *Queries) GetLastHeightByActionByHash(ctx context.Context, arg GetLastHeightByActionByHashParams) (int, error) {
-	row := q.db.QueryRowContext(ctx, getLastHeightByActionByHash, arg.CovenantAction, arg.CovenantNameHash)
-	var height int
-	err := row.Scan(&height)
-	return height, err
+func (q *Queries) GetLastNameBlockHeightByActionAndHash(ctx context.Context, arg GetLastNameBlockHeightByActionAndHashParams) (int32, error) {
+	row := q.db.QueryRowContext(ctx, getLastNameBlockHeightByActionAndHash, arg.CovenantAction, arg.CovenantNameHash)
+	var block_height_not_null int32
+	err := row.Scan(&block_height_not_null)
+	return block_height_not_null, err
 }
 
 const getNameBidsByHash = `-- name: GetNameBidsByHash :many
 SELECT
   transactions.txid AS txid,
-  COALESCE(blocks.height, -1)::integer AS block_height,
-  COALESCE(lockups.value, -1)::integer AS lockup_value,
-  COALESCE(reveals.value, -1)::integer AS reveal_value
+  COALESCE(blocks.height, -1)::integer AS block_height_not_null,
+  lockups.value AS lockup_value,
+  COALESCE(reveals.value, -1)::bigint AS reveal_value_not_null
 FROM
   tx_outputs lockups
   INNER JOIN transactions ON (lockups.txid = transactions.txid)
@@ -58,10 +57,10 @@ type GetNameBidsByHashParams struct {
 }
 
 type GetNameBidsByHashRow struct {
-	Txid        types.Bytes
-	BlockHeight int32
-	LockupValue int32
-	RevealValue int32
+	Txid               types.Bytes
+	BlockHeightNotNull int32
+	LockupValue        int64
+	RevealValueNotNull int64
 }
 
 func (q *Queries) GetNameBidsByHash(ctx context.Context, arg GetNameBidsByHashParams) ([]GetNameBidsByHashRow, error) {
@@ -75,9 +74,9 @@ func (q *Queries) GetNameBidsByHash(ctx context.Context, arg GetNameBidsByHashPa
 		var i GetNameBidsByHashRow
 		if err := rows.Scan(
 			&i.Txid,
-			&i.BlockHeight,
+			&i.BlockHeightNotNull,
 			&i.LockupValue,
-			&i.RevealValue,
+			&i.RevealValueNotNull,
 		); err != nil {
 			return nil, err
 		}
@@ -115,7 +114,7 @@ func (q *Queries) GetNameCountsByHash(ctx context.Context, nameHash types.Bytes)
 const getNameRecordsByHash = `-- name: GetNameRecordsByHash :many
 SELECT
   transactions.txid AS txid,
-  COALESCE(blocks.height, -1)::integer AS block_height,
+  COALESCE(blocks.height, -1)::integer AS block_height_not_null,
   tx_outputs.covenant_record_data::bytea AS data
 FROM
   tx_outputs
@@ -133,9 +132,9 @@ type GetNameRecordsByHashParams struct {
 }
 
 type GetNameRecordsByHashRow struct {
-	Txid        types.Bytes
-	BlockHeight int32
-	Data        types.Bytes
+	Txid               types.Bytes
+	BlockHeightNotNull int32
+	Data               types.Bytes
 }
 
 func (q *Queries) GetNameRecordsByHash(ctx context.Context, arg GetNameRecordsByHashParams) ([]GetNameRecordsByHashRow, error) {
@@ -147,7 +146,7 @@ func (q *Queries) GetNameRecordsByHash(ctx context.Context, arg GetNameRecordsBy
 	items := []GetNameRecordsByHashRow{}
 	for rows.Next() {
 		var i GetNameRecordsByHashRow
-		if err := rows.Scan(&i.Txid, &i.BlockHeight, &i.Data); err != nil {
+		if err := rows.Scan(&i.Txid, &i.BlockHeightNotNull, &i.Data); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

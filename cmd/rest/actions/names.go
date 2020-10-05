@@ -22,11 +22,11 @@ func nameHash(name string) (types.Bytes, error) {
 }
 
 //returns modulo of uint represented by array of bytes
-func modulo(x []byte, j int) int {
-	var m int
+func modulo(x []byte, j int32) int32 {
+	var m int32
 	for i := 0; i < len(x); i++ {
 		m <<= 8
-		m += (int(x[i]) & 0xff)
+		m += (int32(x[i]) & 0xff)
 		m %= j
 	}
 	return m
@@ -37,26 +37,26 @@ type GetNameParams struct {
 }
 
 type GetNameResult struct {
-	ReservedName *ReservedName `json:"reserved,omitempty"`
-	ReleaseBlock int           `json:"release_block"`
-	BidsCount    int32         `json:"bids_count"`
-	RecordsCount int32         `json:"records_count"`
-	State        State         `json:"state"`
+	ReservedName       *ReservedName `json:"reserved,omitempty"`
+	ReleaseBlockHeight int32         `json:"release_block"`
+	BidsCount          int32         `json:"bids_count"`
+	RecordsCount       int32         `json:"records_count"`
+	State              State         `json:"state"`
 }
 
 type State struct {
-	OpenHeight      int          `json:"open_height"`
+	OpenHeight      int32        `json:"open_height"`
 	CurrentState    AuctionState `json:"current_state"`
 	AuctionComplete bool         `json:"auction_completed"`
 }
 
 //get state of the name relative to the block
 //if the auctiobn has not concludedm then name can be opened again after TreeInterval is elapsed
-func getStateByName(ctx *Context, height int, name string) State {
+func getStateByName(ctx *Context, height int32, name string) State {
 	nameHash, _ := nameHash(name)
-	openHeightParams := db.GetLastHeightByActionByHashParams{db.CovenantAction("OPEN"), &nameHash}
-	openHeight, err := ctx.db.GetLastHeightByActionByHash(ctx, openHeightParams)
-	if err == sql.ErrNoRows {
+	openHeightParams := db.GetLastNameBlockHeightByActionAndHashParams{db.CovenantAction("OPEN"), &nameHash}
+	openHeight, err := ctx.db.GetLastNameBlockHeightByActionAndHash(ctx, openHeightParams)
+	if err == sql.ErrNoRows || openHeight == -1 {
 		return State{-1, AuctionStateClosed, false}
 	}
 	if openHeight+treeInterval >= height {
@@ -68,16 +68,13 @@ func getStateByName(ctx *Context, height int, name string) State {
 	if openHeight+treeInterval+blocksPerDay*15 >= height {
 		return State{openHeight, AuctionStateReveal, false}
 	}
-	revealHeightParams := db.GetLastHeightByActionByHashParams{db.CovenantAction("REVEAL"), &nameHash}
-	_, err = ctx.db.GetLastHeightByActionByHash(ctx, revealHeightParams)
+	revealHeightParams := db.GetLastNameBlockHeightByActionAndHashParams{db.CovenantAction("REVEAL"), &nameHash}
+	_, err = ctx.db.GetLastNameBlockHeightByActionAndHash(ctx, revealHeightParams)
 	if err != sql.ErrNoRows {
 		return State{openHeight, AuctionStateClosed, true}
 	}
-	if err == sql.ErrNoRows {
-		return State{openHeight, AuctionStateClosed, false}
-	}
-	claimHeightParams := db.GetLastHeightByActionByHashParams{db.CovenantAction("CLAIM"), &nameHash}
-	_, err = ctx.db.GetLastHeightByActionByHash(ctx, claimHeightParams)
+	claimHeightParams := db.GetLastNameBlockHeightByActionAndHashParams{db.CovenantAction("CLAIM"), &nameHash}
+	_, err = ctx.db.GetLastNameBlockHeightByActionAndHash(ctx, claimHeightParams)
 	return State{}
 }
 
@@ -91,7 +88,7 @@ func GetName(ctx *Context, params *GetNameParams) (*GetNameResult, error) {
 		return nil, err
 	}
 	height, _ := ctx.db.GetBlocksMaxHeight(ctx)
-	result := GetNameResult{nil, ReleaseBlock(params.Name), counts.BidsCount, counts.RecordsCount, getStateByName(ctx, int(height), params.Name)}
+	result := GetNameResult{nil, ReleaseBlock(params.Name), counts.BidsCount, counts.RecordsCount, getStateByName(ctx, height, params.Name)}
 	name, err := ctx.db.GetReservedName(ctx, params.Name)
 	if err == nil {
 		result.ReservedName = &ReservedName{}
@@ -158,7 +155,7 @@ func GetNameRecordsByHash(ctx *Context, params *GetNameRecordsByHashParams) (*Ge
 	return &result, nil
 }
 
-func ReleaseBlock(name string) int {
+func ReleaseBlock(name string) int32 {
 	hash, _ := nameHash(name)
 	return modulo([]byte(hash), 52)*blocksPerDay*7 + 2016
 }

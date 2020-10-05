@@ -13,9 +13,9 @@ WHERE covenant_name_hash = sqlc.arg('name_hash')::bytea;
 -- name: GetNameBidsByHash :many
 SELECT
   transactions.txid AS txid,
-  COALESCE(blocks.height, -1)::integer AS block_height,
+  COALESCE(blocks.height, -1)::integer AS block_height_not_null,
   lockups.value AS lockup_value,
-  COALESCE(reveals.value, -1)::bigint AS reveal_value
+  COALESCE(reveals.value, -1)::bigint AS reveal_value_not_null
 FROM
   tx_outputs lockups
   INNER JOIN transactions ON (lockups.txid = transactions.txid)
@@ -29,7 +29,7 @@ LIMIT sqlc.arg('limit')::integer OFFSET sqlc.arg('offset')::integer;
 -- name: GetNameRecordsByHash :many
 SELECT
   transactions.txid AS txid,
-  COALESCE(blocks.height, -1)::integer AS block_height,
+  COALESCE(blocks.height, -1)::integer AS block_height_not_null,
   tx_outputs.covenant_record_data::bytea AS data
 FROM
   tx_outputs
@@ -39,15 +39,13 @@ WHERE tx_outputs.covenant_record_data IS NOT NULL AND tx_outputs.covenant_name_h
 ORDER BY (blocks.height, transactions.index, tx_outputs.index) DESC NULLS FIRST
 LIMIT sqlc.arg('limit')::integer OFFSET sqlc.arg('offset')::integer;
 
-
--- name: GetLastHeightByActionByHash :one
-select
-blocks.height
-from tx_outputs, blocks, transactions
-where
-covenant_action = $1
-and covenant_name_hash = $2
-and tx_outputs.txid = transactions.txid
-and transactions.block_hash = blocks.hash
-order by height
-desc limit 1;
+-- name: GetLastNameBlockHeightByActionAndHash :one
+SELECT
+  COALESCE(blocks.height, -1)::integer AS block_height_not_null
+FROM
+  tx_outputs
+  INNER JOIN transactions ON (tx_outputs.txid = transactions.txid)
+  LEFT JOIN blocks ON (transactions.block_hash = blocks.hash)
+WHERE covenant_action = $1 AND covenant_name_hash = $2
+ORDER BY blocks.height DESC NULLS FIRST
+LIMIT 1;

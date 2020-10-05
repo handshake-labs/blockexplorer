@@ -15,16 +15,14 @@ SELECT blocks.*, (
   SELECT COUNT(*) FROM transactions WHERE blocks.hash = transactions.block_hash
 )::integer AS txs_count
 FROM blocks
-WHERE blocks.hash = $1
-GROUP BY blocks.hash;
+WHERE blocks.hash = $1;
 
 -- name: GetBlockByHeight :one
 SELECT blocks.*, (
   SELECT COUNT(*) FROM transactions WHERE blocks.hash = transactions.block_hash
 )::integer AS txs_count
 FROM blocks
-WHERE blocks.height = $1
-GROUP BY blocks.hash;
+WHERE blocks.height = $1;
 
 -- name: GetBlockHashByHeight :one
 SELECT hash
@@ -38,6 +36,3 @@ FROM blocks;
 -- name: DeleteBlocksAfterHeight :exec
 DELETE FROM blocks
 WHERE height > $1;
-
--- name: DeleteMempool :exec
-DELETE FROM transactions WHERE block_hash IS NULL;
