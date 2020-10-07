@@ -44,43 +44,6 @@ type GetNameResult struct {
 	State              State         `json:"state"`
 }
 
-type State struct {
-	OpenHeight      int32        `json:"open_height"`
-	CurrentState    AuctionState `json:"current_state"`
-	AuctionComplete bool         `json:"auction_completed"`
-}
-
-//get state of the name relative to the block
-//if the auctiobn has not concludedm then name can be opened again after TreeInterval is elapsed
-func getStateByName(ctx *Context, height int32, name string) State {
-	nameHash, _ := nameHash(name)
-	openHeightParams := db.GetLastNameBlockHeightByActionAndHashParams{db.CovenantAction("OPEN"), &nameHash}
-	openHeight, err := ctx.db.GetLastNameBlockHeightByActionAndHash(ctx, openHeightParams)
-	if err == sql.ErrNoRows || openHeight == -1 {
-		return State{openHeight, AuctionStateClosed, false}
-	}
-	if openHeight+treeInterval >= height {
-		return State{openHeight, AuctionStateOpen, false}
-	}
-	if openHeight+treeInterval+blocksPerDay*5 >= height {
-		return State{openHeight, AuctionStateBid, false}
-	}
-	if openHeight+treeInterval+blocksPerDay*15 >= height {
-		return State{openHeight, AuctionStateReveal, false}
-	}
-	revealHeightParams := db.GetLastNameBlockHeightByActionAndHashParams{db.CovenantAction("REVEAL"), &nameHash}
-	_, err = ctx.db.GetLastNameBlockHeightByActionAndHash(ctx, revealHeightParams)
-	if err != sql.ErrNoRows {
-		return State{openHeight, AuctionStateClosed, true}
-	}
-	if err == sql.ErrNoRows {
-		return State{openHeight, AuctionStateClosed, false}
-	}
-	claimHeightParams := db.GetLastNameBlockHeightByActionAndHashParams{db.CovenantAction("CLAIM"), &nameHash}
-	_, err = ctx.db.GetLastNameBlockHeightByActionAndHash(ctx, claimHeightParams)
-	return State{}
-}
-
 func GetName(ctx *Context, params *GetNameParams) (*GetNameResult, error) {
 	hash, err := nameHash(params.Name)
 	if err != nil {
@@ -90,8 +53,15 @@ func GetName(ctx *Context, params *GetNameParams) (*GetNameResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	height, _ := ctx.db.GetBlocksMaxHeight(ctx)
-	result := GetNameResult{nil, ReleaseBlock(params.Name), counts.BidsCount, counts.RecordsCount, getStateByName(ctx, height, params.Name)}
+	height, err := ctx.db.GetBlocksMaxHeight(ctx)
+	if err != nil {
+		return nil, err
+	}
+	state, err := getStateByName(ctx, height, params.Name)
+	if err != nil {
+		return nil, err
+	}
+	result := GetNameResult{nil, ReleaseBlock(params.Name), counts.BidsCount, counts.RecordsCount, *state}
 	name, err := ctx.db.GetReservedName(ctx, params.Name)
 	if err == nil {
 		result.ReservedName = &ReservedName{}
@@ -100,6 +70,55 @@ func GetName(ctx *Context, params *GetNameParams) (*GetNameResult, error) {
 		return nil, err
 	}
 	return &result, nil
+}
+
+type State struct {
+	OpenHeight      int32        `json:"open_height,omitempty"`
+	CurrentState    AuctionState `json:"current_state"`
+	AuctionComplete bool         `json:"auction_completed"`
+}
+
+//get state of the name relative to the block
+//if the auctiobn has not concludedm then name can be opened again after TreeInterval is elapsed
+func getStateByName(ctx *Context, height int32, name string) (*State, error) {
+	state := State{}
+	nameHash, _ := nameHash(name)
+	openHeightParams := db.GetLastNameBlockHeightByActionAndHashParams{db.CovenantAction("OPEN"), &nameHash}
+	openHeight, err := ctx.db.GetLastNameBlockHeightByActionAndHash(ctx, openHeightParams)
+	if err == sql.ErrNoRows || openHeight == -1 {
+		state.CurrentState = AuctionStateClosed
+		state.AuctionComplete = false
+	} else if err != nil {
+		return nil, err
+	}
+	state.OpenHeight = openHeight
+	if openHeight+treeInterval >= height {
+		state.CurrentState = AuctionStateClosed
+		state.AuctionComplete = false
+	}
+	if openHeight+treeInterval+blocksPerDay*5 >= height {
+		state.CurrentState = AuctionStateBid
+		state.AuctionComplete = false
+	}
+	if openHeight+treeInterval+blocksPerDay*15 >= height {
+		state.CurrentState = AuctionStateReveal
+		state.AuctionComplete = false
+	}
+	revealHeightParams := db.GetLastNameBlockHeightByActionAndHashParams{db.CovenantAction("REVEAL"), &nameHash}
+	revealHeight, err := ctx.db.GetLastNameBlockHeightByActionAndHash(ctx, revealHeightParams)
+	if revealHeight >= openHeight {
+		state.CurrentState = AuctionStateClosed
+		state.AuctionComplete = true
+	}
+	if err == sql.ErrNoRows {
+		state.CurrentState = AuctionStateClosed
+		state.AuctionComplete = false
+	} else if err != nil {
+		return nil, err
+	}
+	claimHeightParams := db.GetLastNameBlockHeightByActionAndHashParams{db.CovenantAction("CLAIM"), &nameHash}
+	_, err = ctx.db.GetLastNameBlockHeightByActionAndHash(ctx, claimHeightParams)
+	return &state, nil
 }
 
 type GetNameBidsByHashParams struct {

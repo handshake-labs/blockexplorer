@@ -161,14 +161,25 @@ func (q *Queries) GetNameRecordsByHash(ctx context.Context, arg GetNameRecordsBy
 }
 
 const getReservedName = `-- name: GetReservedName :one
-SELECT origin_name, name, name_hash, claim_amount
+SELECT 
+CONVERT_FROM(origin_name, 'SQL_ASCII')::text as origin_name,
+CONVERT_FROM(name, 'SQL_ASCII')::text as name,
+name_hash,
+claim_amount
 FROM reserved_names
 WHERE name = $1
 `
 
-func (q *Queries) GetReservedName(ctx context.Context, name string) (ReservedName, error) {
+type GetReservedNameRow struct {
+	OriginName  string
+	Name        string
+	NameHash    types.Bytes
+	ClaimAmount int64
+}
+
+func (q *Queries) GetReservedName(ctx context.Context, name string) (GetReservedNameRow, error) {
 	row := q.db.QueryRowContext(ctx, getReservedName, name)
-	var i ReservedName
+	var i GetReservedNameRow
 	err := row.Scan(
 		&i.OriginName,
 		&i.Name,

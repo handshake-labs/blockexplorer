@@ -66,7 +66,7 @@ type TxOutput struct {
 }
 
 type ReservedName struct {
-	OriginName  types.Bytes `json:"originName"`
+	OriginName  string      `json:"originName"`
 	Name        string      `json:"name"`
 	NameHash    types.Bytes `json:"nameHash"`
 	ClaimAmount int64       `json:"claimAmount"`

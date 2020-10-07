@@ -1,5 +1,9 @@
 -- name: GetReservedName :one
-SELECT *
+SELECT 
+CONVERT_FROM(origin_name, 'SQL_ASCII')::text as origin_name,
+CONVERT_FROM(name, 'SQL_ASCII')::text as name,
+name_hash,
+claim_amount
 FROM reserved_names
 WHERE name = $1;
 
