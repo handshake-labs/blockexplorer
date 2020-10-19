@@ -7,6 +7,7 @@ import (
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 	"github.com/jinzhu/copier"
 	"golang.org/x/crypto/sha3"
+	"strings"
 )
 
 const treeInterval = 36
@@ -38,14 +39,19 @@ type GetNameParams struct {
 
 type GetNameResult struct {
 	ReservedName       *ReservedName `json:"reserved,omitempty"`
-	ReleaseBlockHeight int32         `json:"release_block"`
-	BidsCount          int32         `json:"bids_count"`
-	RecordsCount       int32         `json:"records_count"`
-	State              State         `json:"state"`
+	ReleaseBlockHeight int32         `json:"release_block,omitempty"`
+	BidsCount          int32         `json:"bids_count,omitempty"`
+	RecordsCount       int32         `json:"records_count,omitempty"`
+	State              *State        `json:"state,omitempty"`
 }
 
 func GetName(ctx *Context, params *GetNameParams) (*GetNameResult, error) {
-	hash, err := nameHash(params.Name)
+	result := GetNameResult{}
+	nameString := strings.ToLower(params.Name)
+	if len(nameString) > 63 || nameString == "localhost" || nameString == "local" || nameString == "invalid" || nameString == "test" || nameString == "example" {
+		return &result, nil
+	}
+	hash, err := nameHash(nameString)
 	if err != nil {
 		return nil, err
 	}
@@ -57,12 +63,12 @@ func GetName(ctx *Context, params *GetNameParams) (*GetNameResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	state, err := getStateByName(ctx, height, params.Name)
+	state, err := getStateByName(ctx, height, nameString)
 	if err != nil {
 		return nil, err
 	}
-	result := GetNameResult{nil, ReleaseBlock(params.Name), counts.BidsCount, counts.RecordsCount, *state}
-	name, err := ctx.db.GetReservedName(ctx, params.Name)
+	result = GetNameResult{nil, ReleaseBlock(nameString), counts.BidsCount, counts.RecordsCount, state}
+	name, err := ctx.db.GetReservedName(ctx, nameString)
 	if err == nil {
 		result.ReservedName = &ReservedName{}
 		copier.Copy(&result.ReservedName, &name)

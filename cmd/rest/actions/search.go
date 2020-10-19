@@ -44,6 +44,9 @@ func Search(ctx *Context, params *SearchParams) (*SearchResult, error) {
 	punycoded_name, err := idna.ToASCII(query)
 	if err == nil {
 		name = string(punycoded_name)
+		if name == "localhost" || name == "local" || name == "invalid" || name == "test" || name == "example" {
+			return &result, nil
+		}
 	}
 	result.BlockHeight = blockHeight
 	result.Transaction = tx
