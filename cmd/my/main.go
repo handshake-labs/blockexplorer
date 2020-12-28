@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"database/sql"
+	"github.com/handshake-labs/blockexplorer/pkg/db"
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 	"os"
 	// "github.com/handshake-labs/blockexplorer/rest/actions"
-	"github.com/handshake-labs/blockexplorer/pkg/db"
 	_ "github.com/lib/pq"
 	"golang.org/x/crypto/sha3"
 	"log"
@@ -37,18 +37,22 @@ func ReleaseBlock(name string) int {
 	log.Println(w)
 	return w
 }
+
 func main() {
 	pg, _ := sql.Open("postgres", os.Getenv("POSTGRES_URI"))
 	q := db.New(pg)
 	z, _ := nameHash("js")
-	params := db.GetLastHeightByActionByHashParams{db.CovenantAction("OPEN"), &z}
-	c, t := q.GetLastHeightByActionByHash(context.Background(), params)
+	// q.GetLastNameBlockHeightByActionAndHash
+	params := db.GetLastNameBlockHeightByActionAndHashParams{db.CovenantAction("OPEN"), &z}
+	// params := q.GetLastNameBlockHeightByActionByHash{db.CovenantAction("OPEN"), &z}
+	c, t := q.GetLastNameBlockHeightByActionAndHash(context.Background(), params)
+	// GetLastNameBlockHeightByActionAndHash
 	log.Println(c)
 	log.Println(t)
 	z, _ = nameHash("stalin")
-	params = db.GetLastHeightByActionByHashParams{db.CovenantAction("OPEN"), &z}
-	c, t = q.GetLastHeightByActionByHash(context.Background(), params)
-	log.Println(c)
+	params = db.GetLastNameBlockHeightByActionAndHashParams{db.CovenantAction("OPEN"), &z}
+	c, t = q.GetLastNameBlockHeightByActionAndHash(context.Background(), params)
+	log.Println("%+v", c)
 	log.Println(t)
 	// nc := node.NewClient(os.Getenv("NODE_API_ORIGIN"), os.Getenv("NODE_API_KEY"))
 

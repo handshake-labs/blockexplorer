@@ -82,3 +82,9 @@ Next push it to the registry (you need to be authorizied for this action).
 ```
 docker push us-east4-docker.pkg.dev/extended-ripple-284214/handshake/sync:blockexplorer
 ```
+
+
+
+## TODO
+
+- fix fees show

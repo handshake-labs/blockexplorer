@@ -85,7 +85,7 @@ type State struct {
 }
 
 //get state of the name relative to the block
-//if the auctiobn has not concludedm then name can be opened again after TreeInterval is elapsed
+//if the auction has not concluded then name can be opened again after TreeInterval is elapsed
 func getStateByName(ctx *Context, height int32, name string) (*State, error) {
 	state := State{}
 	nameHash, _ := nameHash(name)
@@ -101,24 +101,29 @@ func getStateByName(ctx *Context, height int32, name string) (*State, error) {
 	if openHeight+treeInterval >= height {
 		state.CurrentState = AuctionStateClosed
 		state.AuctionComplete = false
+		return &state, nil
 	}
-	if openHeight+treeInterval+blocksPerDay*5 >= height {
+	if openHeight+treeInterval+1+blocksPerDay*5 >= height {
 		state.CurrentState = AuctionStateBid
 		state.AuctionComplete = false
+		return &state, nil
 	}
-	if openHeight+treeInterval+blocksPerDay*15 >= height {
+	if openHeight+treeInterval+1+blocksPerDay*15 >= height {
 		state.CurrentState = AuctionStateReveal
 		state.AuctionComplete = false
+		return &state, nil
 	}
 	revealHeightParams := db.GetLastNameBlockHeightByActionAndHashParams{db.CovenantAction("REVEAL"), &nameHash}
 	revealHeight, err := ctx.db.GetLastNameBlockHeightByActionAndHash(ctx, revealHeightParams)
 	if revealHeight >= openHeight {
 		state.CurrentState = AuctionStateClosed
 		state.AuctionComplete = true
+		return &state, nil
 	}
 	if err == sql.ErrNoRows {
 		state.CurrentState = AuctionStateClosed
 		state.AuctionComplete = false
+		return &state, nil
 	} else if err != nil {
 		return nil, err
 	}
@@ -138,7 +143,8 @@ type GetNameBidsByHashResult struct {
 }
 
 func GetNameBidsByHash(ctx *Context, params *GetNameBidsByHashParams) (*GetNameBidsByHashResult, error) {
-	hash, err := nameHash(params.Name)
+	nameString := strings.ToLower(params.Name)
+	hash, err := nameHash(nameString)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +172,8 @@ type GetNameRecordsByHashResult struct {
 }
 
 func GetNameRecordsByHash(ctx *Context, params *GetNameRecordsByHashParams) (*GetNameRecordsByHashResult, error) {
-	hash, err := nameHash(params.Name)
+	nameString := strings.ToLower(params.Name)
+	hash, err := nameHash(nameString)
 	if err != nil {
 		return nil, err
 	}
