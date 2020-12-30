@@ -28,7 +28,10 @@ func syncMempool(pg *sql.DB, nc *node.Client) error {
 	defer tx.Rollback()
 	q := db.New(tx)
 	txs, err := nc.GetMempool(context.Background())
-	for _, transaction := range *txs {
+	if err != nil {
+		return err
+	}
+	for _, transaction := range txs {
 		tx := node.Transaction{}
 		copier.Copy(&tx, &transaction)
 		if err := insertTransaction(q, &tx, nil, nil); err != nil {

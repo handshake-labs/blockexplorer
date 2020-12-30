@@ -69,16 +69,3 @@ docker build -t rest:blockexplorer -f Dockerfile.rest .
 
 Be aware of .dockerignore which should differ for docker-compose and for docker build
 
-
-## Google artifact-registry
-
-Tag the image:
-```
-docker tag sync:blockexplorer us-east4-docker.pkg.dev/extended-ripple-284214/handshake/sync:blockexplorer
-```
-
-Next push it to the registry (you need to be authorizied for this action).
-
-```
-docker push us-east4-docker.pkg.dev/extended-ripple-284214/handshake/sync:blockexplorer
-```
