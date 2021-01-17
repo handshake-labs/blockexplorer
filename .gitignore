@@ -3,3 +3,4 @@
 cmd/my/*
 vendor/
 *tmp/
+build-dockers.sh

@@ -84,7 +84,3 @@ docker push us-east4-docker.pkg.dev/extended-ripple-284214/handshake/sync:blocke
 ```
 
 
-
-## TODO
-
-- fix fees show
