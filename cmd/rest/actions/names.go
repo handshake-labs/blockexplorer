@@ -39,19 +39,16 @@ type GetNameParams struct {
 
 type GetNameResult struct {
 	ReservedName       *ReservedName `json:"reserved,omitempty"`
-	ReleaseBlockHeight int32         `json:"release_block,omitempty"`
-	BidsCount          int32         `json:"bids_count,omitempty"`
-	RecordsCount       int32         `json:"records_count,omitempty"`
-	State              *State        `json:"state,omitempty"`
+	ReleaseBlockHeight int32         `json:"release_block"`
+	BidsCount          int32         `json:"bids_count"`
+	RecordsCount       int32         `json:"records_count"`
+	ActionsCount       int32         `json:"actions_count"`
+	State              State         `json:"state"`
 }
 
 func GetName(ctx *Context, params *GetNameParams) (*GetNameResult, error) {
-	result := GetNameResult{}
-	nameString := strings.ToLower(params.Name)
-	if len(nameString) > 63 || nameString == "localhost" || nameString == "local" || nameString == "invalid" || nameString == "test" || nameString == "example" {
-		return &result, nil
-	}
-	hash, err := nameHash(nameString)
+	name := strings.ToLower(params.Name)
+	hash, err := nameHash(name)
 	if err != nil {
 		return nil, err
 	}
@@ -63,15 +60,15 @@ func GetName(ctx *Context, params *GetNameParams) (*GetNameResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	state, err := getStateByName(ctx, height, nameString)
+	state, err := getStateByName(ctx, height, name)
 	if err != nil {
 		return nil, err
 	}
-	result = GetNameResult{nil, ReleaseBlock(nameString), counts.BidsCount, counts.RecordsCount, state}
-	name, err := ctx.db.GetReservedName(ctx, nameString)
+	result := GetNameResult{nil, ReleaseBlock(name), counts.BidsCount, counts.RecordsCount, counts.ActionsCount, *state}
+	reserve, err := ctx.db.GetReservedName(ctx, name)
 	if err == nil {
 		result.ReservedName = &ReservedName{}
-		copier.Copy(&result.ReservedName, &name)
+		copier.Copy(&result.ReservedName, &reserve)
 	} else if err != sql.ErrNoRows {
 		return nil, err
 	}
@@ -132,19 +129,19 @@ func getStateByName(ctx *Context, height int32, name string) (*State, error) {
 	return &state, nil
 }
 
-type GetNameBidsByHashParams struct {
+type GetNameBidsParams struct {
 	Name   string `json:"name"`
 	Limit  int8   `json:"limit"`
 	Offset int32  `json:"offset"`
 }
 
-type GetNameBidsByHashResult struct {
+type GetNameBidsResult struct {
 	NameBids []NameBid `json:"bids"`
 }
 
-func GetNameBidsByHash(ctx *Context, params *GetNameBidsByHashParams) (*GetNameBidsByHashResult, error) {
-	nameString := strings.ToLower(params.Name)
-	hash, err := nameHash(nameString)
+func GetNameBids(ctx *Context, params *GetNameBidsParams) (*GetNameBidsResult, error) {
+	name := strings.ToLower(params.Name)
+	hash, err := nameHash(name)
 	if err != nil {
 		return nil, err
 	}
@@ -156,24 +153,53 @@ func GetNameBidsByHash(ctx *Context, params *GetNameBidsByHashParams) (*GetNameB
 	if err != nil {
 		return nil, err
 	}
-	result := GetNameBidsByHashResult{[]NameBid{}}
+	result := GetNameBidsResult{[]NameBid{}}
 	copier.Copy(&result.NameBids, &bids)
 	return &result, nil
 }
 
-type GetNameRecordsByHashParams struct {
+type GetNameActionsParams struct {
 	Name   string `json:"name"`
 	Limit  int8   `json:"limit"`
 	Offset int32  `json:"offset"`
 }
 
-type GetNameRecordsByHashResult struct {
+type GetNameActionsResult struct {
+	NameActions []NameAction `json:"actions"`
+}
+
+func GetNameActions(ctx *Context, params *GetNameActionsParams) (*GetNameActionsResult, error) {
+	name := strings.ToLower(params.Name)
+	hash, err := nameHash(name)
+	if err != nil {
+		return nil, err
+	}
+	actions, err := ctx.db.GetNameOtherActionsByHash(ctx, db.GetNameOtherActionsByHashParams{
+		NameHash: hash,
+		Limit:    int32(params.Limit),
+		Offset:   params.Offset,
+	})
+	if err != nil {
+		return nil, err
+	}
+	result := GetNameActionsResult{[]NameAction{}}
+	copier.Copy(&result.NameActions, &actions)
+	return &result, nil
+}
+
+type GetNameRecordsParams struct {
+	Name   string `json:"name"`
+	Limit  int8   `json:"limit"`
+	Offset int32  `json:"offset"`
+}
+
+type GetNameRecordsResult struct {
 	NameRecords []NameRecord `json:"records"`
 }
 
-func GetNameRecordsByHash(ctx *Context, params *GetNameRecordsByHashParams) (*GetNameRecordsByHashResult, error) {
-	nameString := strings.ToLower(params.Name)
-	hash, err := nameHash(nameString)
+func GetNameRecords(ctx *Context, params *GetNameRecordsParams) (*GetNameRecordsResult, error) {
+	name := strings.ToLower(params.Name)
+	hash, err := nameHash(name)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +211,7 @@ func GetNameRecordsByHash(ctx *Context, params *GetNameRecordsByHashParams) (*Ge
 	if err != nil {
 		return nil, err
 	}
-	result := GetNameRecordsByHashResult{[]NameRecord{}}
+	result := GetNameRecordsResult{[]NameRecord{}}
 	copier.Copy(&result.NameRecords, &records)
 	return &result, nil
 }

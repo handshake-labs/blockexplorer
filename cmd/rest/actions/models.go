@@ -85,6 +85,12 @@ type NameRecord struct {
 	Data        types.Bytes `json:"data"`
 }
 
+type NameAction struct {
+	Txid           types.Bytes       `json:"txid"`
+	BlockHeight    *int32            `json:"height"`
+	CovenantAction db.CovenantAction `json:"covenantAction"`
+}
+
 type AuctionState string
 
 const (

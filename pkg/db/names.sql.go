@@ -94,7 +94,8 @@ func (q *Queries) GetNameBidsByHash(ctx context.Context, arg GetNameBidsByHashPa
 const getNameCountsByHash = `-- name: GetNameCountsByHash :one
 SELECT
   (COUNT(*) FILTER (WHERE covenant_action = 'BID'))::integer AS bids_count,
-  COUNT(covenant_record_data)::integer AS records_count
+  COUNT(covenant_record_data)::integer AS records_count,
+  (COUNT(*) FILTER (WHERE covenant_action = 'CLAIM' OR covenant_action = 'RENEW' OR covenant_action = 'TRANSFER' OR covenant_action = 'FINALIZE' OR covenant_action = 'REVOKE'))::integer AS actions_count
 FROM tx_outputs
 WHERE covenant_name_hash = $1::bytea
 `
@@ -102,13 +103,69 @@ WHERE covenant_name_hash = $1::bytea
 type GetNameCountsByHashRow struct {
 	BidsCount    int32
 	RecordsCount int32
+	ActionsCount int32
 }
 
 func (q *Queries) GetNameCountsByHash(ctx context.Context, nameHash types.Bytes) (GetNameCountsByHashRow, error) {
 	row := q.db.QueryRowContext(ctx, getNameCountsByHash, nameHash)
 	var i GetNameCountsByHashRow
-	err := row.Scan(&i.BidsCount, &i.RecordsCount)
+	err := row.Scan(&i.BidsCount, &i.RecordsCount, &i.ActionsCount)
 	return i, err
+}
+
+const getNameOtherActionsByHash = `-- name: GetNameOtherActionsByHash :many
+SELECT
+  transactions.txid AS txid,
+  COALESCE(blocks.height, -1)::integer AS block_height,
+  tx_outputs.covenant_action AS covenant_action
+FROM
+  tx_outputs 
+  INNER JOIN transactions ON (tx_outputs.txid = transactions.txid)
+  LEFT JOIN blocks ON (transactions.block_hash = blocks.hash)
+WHERE
+  tx_outputs.covenant_action != 'OPEN' AND
+  tx_outputs.covenant_action != 'BID' AND
+  tx_outputs.covenant_action != 'REVEAL' AND
+  tx_outputs.covenant_action != 'REDEEM' AND
+  tx_outputs.covenant_name_hash = $1::bytea  AND
+  tx_outputs.covenant_record_data IS NULL
+ORDER BY (blocks.height, transactions.index, tx_outputs.index) DESC NULLS FIRST
+LIMIT $3::integer OFFSET $2::integer
+`
+
+type GetNameOtherActionsByHashParams struct {
+	NameHash types.Bytes
+	Offset   int32
+	Limit    int32
+}
+
+type GetNameOtherActionsByHashRow struct {
+	Txid           types.Bytes
+	BlockHeight    int32
+	CovenantAction CovenantAction
+}
+
+func (q *Queries) GetNameOtherActionsByHash(ctx context.Context, arg GetNameOtherActionsByHashParams) ([]GetNameOtherActionsByHashRow, error) {
+	rows, err := q.db.QueryContext(ctx, getNameOtherActionsByHash, arg.NameHash, arg.Offset, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetNameOtherActionsByHashRow{}
+	for rows.Next() {
+		var i GetNameOtherActionsByHashRow
+		if err := rows.Scan(&i.Txid, &i.BlockHeight, &i.CovenantAction); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getNameRecordsByHash = `-- name: GetNameRecordsByHash :many
