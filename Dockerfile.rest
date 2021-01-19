@@ -11,3 +11,5 @@ RUN go build github.com/handshake-labs/blockexplorer/cmd/rest
 FROM alpine
 COPY --from=build /src/rest .
 ENTRYPOINT ["./rest"]
+
+test
