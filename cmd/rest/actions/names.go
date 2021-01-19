@@ -100,12 +100,12 @@ func getStateByName(ctx *Context, height int32, name string) (*State, error) {
 		state.AuctionComplete = false
 		return &state, nil
 	}
-	if openHeight+treeInterval+1+blocksPerDay*5 >= height {
+	if openHeight+treeInterval+1+blocksPerDay*5 > height {
 		state.CurrentState = AuctionStateBid
 		state.AuctionComplete = false
 		return &state, nil
 	}
-	if openHeight+treeInterval+1+blocksPerDay*15 >= height {
+	if openHeight+treeInterval+1+blocksPerDay*15 > height {
 		state.CurrentState = AuctionStateReveal
 		state.AuctionComplete = false
 		return &state, nil
