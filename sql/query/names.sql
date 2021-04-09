@@ -17,18 +17,26 @@ WHERE covenant_name_hash = sqlc.arg('name_hash')::bytea;
 
 -- name: GetNameBidsByHash :many
 SELECT
-  transactions.txid AS txid,
+  DISTINCT ON (block_height_not_null, lockup_inputs.index)
+  bids.txid AS bid_txid, 
   COALESCE(blocks.height, -1)::integer AS block_height_not_null,
-  lockups.value AS lockup_value,
-  COALESCE(reveals.value, -1)::bigint AS reveal_value_not_null
-FROM
-  tx_outputs lockups
-  INNER JOIN transactions ON (lockups.txid = transactions.txid)
-  LEFT JOIN blocks ON (transactions.block_hash = blocks.hash)
-  LEFT JOIN tx_outputs reveals ON (reveals.covenant_action = 'REVEAL' AND lockups.covenant_name_hash = reveals.covenant_name_hash AND lockups.address = reveals.address)
-  LEFT JOIN tx_inputs ON (reveals.txid = tx_inputs.txid AND lockups.index = tx_inputs.index)
-WHERE lockups.covenant_action = 'BID' AND lockups.covenant_name_hash = sqlc.arg('name_hash')::bytea
-ORDER BY (blocks.height, transactions.index, lockups.index) DESC NULLS FIRST
+  reveals.txid AS reveal_txid,
+  lockup_outputs.value as lockup_value,
+  COALESCE(reveal_outputs.value, -1) as reveal_value_not_null
+FROM                                                  
+  transactions as bids
+  JOIN tx_inputs as lockup_inputs ON lockup_inputs.txid=bids.txid
+  JOIN blocks ON (bids.block_hash = blocks.hash)
+  JOIN tx_outputs as lockup_outputs ON lockup_outputs.txid=bids.txid AND lockup_outputs.covenant_action = 'BID'
+  JOIN tx_outputs reveal_outputs ON reveal_outputs.covenant_action = 'REVEAL'  AND reveal_outputs.covenant_name_hash = lockup_outputs.covenant_name_hash
+  JOIN tx_inputs reveal_inputs ON
+     reveal_inputs.txid = reveal_outputs.txid AND
+     reveal_inputs.index = reveal_outputs.index AND
+     reveal_inputs.hash_prevout = lockup_outputs.txid AND
+     reveal_inputs.index_prevout = lockup_outputs.index
+ JOIN transactions as reveals ON reveal_inputs.txid = reveals.txid AND reveal_outputs.txid = reveals.txid
+WHERE lockup_outputs.covenant_name_hash = sqlc.arg('name_hash')::bytea
+ORDER BY block_height_not_null DESC NULLS FIRST, lockup_inputs.index DESC NULLS FIRST
 LIMIT sqlc.arg('limit')::integer OFFSET sqlc.arg('offset')::integer;
 
 -- name: GetNameRecordsByHash :many

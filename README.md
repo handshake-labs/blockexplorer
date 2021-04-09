@@ -1,5 +1,9 @@
 # Tools
 
+## go2ts
+
+`go run -tags typescript github.com/handshake-labs/blockexplorer/cmd/rest > ../<frontend dir>/src/api.ts`
+
 ## docker
 
 Start PostgreSQL and HSD node containers.
@@ -39,13 +43,9 @@ Synchronize the database
 go run services/blocks_sync/*.go
 ```
 
-
-
 TODOS:
 - check what happens if the node stops and has to resync from block 0. will the sync and the db be ok?
-- parse the record data
-- add icann restricted names
-
+- add links to reveal tx (click on lockup/reveal to follow the link)
 
 Docker build
 
@@ -53,7 +53,6 @@ Docker build
 
 `go mod download`
 `go mod vendor`
-
 
 ## Build
 

@@ -73,8 +73,9 @@ type ReservedName struct {
 }
 
 type NameBid struct {
-	Txid        types.Bytes `json:"txid"`
+	BidTxid     types.Bytes `json:"bid_txid"`
 	BlockHeight *int32      `json:"height"`
+	RevealTxid  types.Bytes `json:"reveal_txid"`
 	LockupValue int64       `json:"lockup"`
 	RevealValue *int64      `json:"reveal"`
 }
