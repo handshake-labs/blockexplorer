@@ -43,16 +43,16 @@ SELECT
   COALESCE(reveal_outputs.value, -1) as reveal_value_not_null
 FROM                                                  
   transactions as bids
-  LEFT JOIN tx_inputs as lockup_inputs ON lockup_inputs.txid=bids.txid
-  LEFT JOIN blocks ON (bids.block_hash = blocks.hash)
-  LEFT JOIN tx_outputs as lockup_outputs ON lockup_outputs.txid=bids.txid AND lockup_outputs.covenant_action = 'BID'
-  LEFT JOIN tx_outputs reveal_outputs ON reveal_outputs.covenant_action = 'REVEAL'  AND reveal_outputs.covenant_name_hash = lockup_outputs.covenant_name_hash
-  LEFT JOIN tx_inputs reveal_inputs ON
-     reveal_inputs.txid = reveal_outputs.txid AND
-     reveal_inputs.index = reveal_outputs.index AND
+  JOIN tx_inputs as lockup_inputs ON lockup_inputs.txid=bids.txid
+  JOIN blocks ON (bids.block_hash = blocks.hash)
+  JOIN tx_outputs as lockup_outputs ON lockup_outputs.txid=bids.txid AND lockup_outputs.covenant_action = 'BID'
+  left JOIN tx_inputs reveal_inputs ON
      reveal_inputs.hash_prevout = lockup_outputs.txid AND
      reveal_inputs.index_prevout = lockup_outputs.index
-  LEFT JOIN transactions as reveals ON reveal_inputs.txid = reveals.txid AND reveal_outputs.txid = reveals.txid
+  left JOIN tx_outputs reveal_outputs ON reveal_outputs.covenant_action = 'REVEAL'  AND reveal_outputs.covenant_name_hash = lockup_outputs.covenant_name_hash AND
+     reveal_inputs.txid = reveal_outputs.txid AND
+     reveal_inputs.index = reveal_outputs.index 
+  left JOIN transactions as reveals ON reveal_inputs.txid = reveals.txid AND reveal_outputs.txid = reveals.txid
 WHERE lockup_outputs.covenant_name_hash = $1::bytea
 ORDER BY block_height_not_null DESC NULLS FIRST
 LIMIT $3::integer OFFSET $2::integer
