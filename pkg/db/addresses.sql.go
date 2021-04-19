@@ -21,11 +21,12 @@ func (q *Queries) AddressExists(ctx context.Context, address string) (bool, erro
 }
 
 const getAddressInfo = `-- name: GetAddressInfo :one
+
 SELECT
   COALESCE(SUM(tx_outputs.value), 0)::bigint AS value_total,
   COALESCE(SUM(tx_outputs.value) filter (WHERE tx_inputs.txid IS NOT NULL), 0)::bigint AS value_used,
-  COUNT(*) AS tx_outputs_total,
-  COUNT(tx_inputs.*) AS tx_outputs_used
+  COUNT(tx_outputs.txid) AS tx_outputs_total,
+  COUNT(tx_inputs.hash_prevout) AS tx_outputs_used
 FROM tx_outputs
 LEFT JOIN tx_inputs ON tx_outputs.txid = tx_inputs.hash_prevout AND tx_outputs.index = tx_inputs.index_prevout
 WHERE tx_outputs.address = $1::text
@@ -38,6 +39,7 @@ type GetAddressInfoRow struct {
 	TxOutputsUsed  int64
 }
 
+//This query takes a lot of time, perhaps can be optimized further
 func (q *Queries) GetAddressInfo(ctx context.Context, address string) (GetAddressInfoRow, error) {
 	row := q.db.QueryRowContext(ctx, getAddressInfo, address)
 	var i GetAddressInfoRow
@@ -51,6 +53,7 @@ func (q *Queries) GetAddressInfo(ctx context.Context, address string) (GetAddres
 }
 
 const getTxOutputsByAddress = `-- name: GetTxOutputsByAddress :many
+
 SELECT
   DISTINCT tx_outputs.txid, tx_outputs.index, tx_outputs.value, tx_outputs.address, tx_outputs.covenant_action, tx_outputs.covenant_name_hash, tx_outputs.covenant_height, tx_outputs.covenant_name, tx_outputs.covenant_bid_hash, tx_outputs.covenant_nonce, tx_outputs.covenant_record_data, tx_outputs.covenant_block_hash, tx_outputs.covenant_version, tx_outputs.covenant_address, tx_outputs.covenant_claim_height, tx_outputs.covenant_renewal_count,
   COALESCE(tx_inputs.txid, '\x') AS hash_prevout_not_null,
@@ -100,6 +103,8 @@ type GetTxOutputsByAddressRow struct {
 	Name                 string
 }
 
+//This query can be optimized to be very quick by removing join for the name,
+//however as it's still quicker than the GetAddressInfo I've left the name for the sake of simplicity
 func (q *Queries) GetTxOutputsByAddress(ctx context.Context, arg GetTxOutputsByAddressParams) ([]GetTxOutputsByAddressRow, error) {
 	rows, err := q.db.QueryContext(ctx, getTxOutputsByAddress, arg.Address, arg.Offset, arg.Limit)
 	if err != nil {

@@ -1,3 +1,6 @@
+--This query can be optimized to be very quick by removing join for the name,
+--however as it's still quicker than the GetAddressInfo I've left the name for the sake of simplicity
+
 -- name: GetTxOutputsByAddress :many
 SELECT
   DISTINCT tx_outputs.*,
@@ -17,12 +20,15 @@ WHERE tx_outputs.address = sqlc.arg('address')::text
 ORDER BY blocks.height DESC 
 LIMIT sqlc.arg('limit')::integer OFFSET sqlc.arg('offset')::integer;
 
+
+--This query takes a lot of time, perhaps can be optimized further
+
 -- name: GetAddressInfo :one
 SELECT
   COALESCE(SUM(tx_outputs.value), 0)::bigint AS value_total,
   COALESCE(SUM(tx_outputs.value) filter (WHERE tx_inputs.txid IS NOT NULL), 0)::bigint AS value_used,
-  COUNT(*) AS tx_outputs_total,
-  COUNT(tx_inputs.*) AS tx_outputs_used
+  COUNT(tx_outputs.txid) AS tx_outputs_total,
+  COUNT(tx_inputs.hash_prevout) AS tx_outputs_used
 FROM tx_outputs
 LEFT JOIN tx_inputs ON tx_outputs.txid = tx_inputs.hash_prevout AND tx_outputs.index = tx_inputs.index_prevout
 WHERE tx_outputs.address = sqlc.arg('address')::text;
