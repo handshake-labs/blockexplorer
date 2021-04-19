@@ -100,3 +100,24 @@ const (
 	AuctionStateBid    AuctionState = "BID"
 	AuctionStateReveal AuctionState = "REVEAL"
 )
+
+type HistoryEntry struct {
+	Value                int64             `json:"value"`
+	Address              string            `json:"address"`
+	CovenantAction       db.CovenantAction `json:"covenantAction"`
+	CovenantNameHash     types.Bytes       `json:"covenantNameHash,omitempty"`
+	CovenantHeight       types.Bytes       `json:"covenantHeight,omitempty"`
+	CovenantName         types.Bytes       `json:"covenantName,omitempty"`
+	CovenantBidHash      types.Bytes       `json:"covenantBidHash,omitempty"`
+	CovenantNonce        types.Bytes       `json:"covenantNonce,omitempty"`
+	CovenantRecordData   types.Bytes       `json:"covenantRecordData,omitempty"`
+	CovenantBlockHash    types.Bytes       `json:"covenantBlockHash,omitempty"`
+	CovenantVersion      types.Bytes       `json:"covenantVersion,omitempty"`
+	CovenantAddress      types.Bytes       `json:"covenantAddress,omitempty"`
+	CovenantClaimHeight  types.Bytes       `json:"covenantClaimHeight,omitempty"`
+	CovenantRenewalCount types.Bytes       `json:"covenantRenewalCount,omitempty"`
+	Name                 string            `json:"name,omitempty"`
+	Height               *int32            `json:"height"`
+	SpendTxid            *types.Bytes      `json:"spend_txid"`
+	SpendIndex           *int64            `json:"spend_index"`
+}

@@ -17,10 +17,11 @@ type SearchResult struct {
 	Transaction string `json:"transaction"`
 	BlockHeight int32  `json:"block"`
 	Name        string `json:"name"`
+	Address     string `json:"address"`
 }
 
 func Search(ctx *Context, params *SearchParams) (*SearchResult, error) {
-	var tx, name string
+	var tx, name, address string
 	var blockHeight int32
 	var result SearchResult
 	query := params.Query
@@ -37,6 +38,12 @@ func Search(ctx *Context, params *SearchParams) (*SearchResult, error) {
 			}
 		}
 	}
+	//check if there is tx_output for address equal to query string
+	if addressResult, err := ctx.db.GetAddressInfo(ctx, query); err == nil {
+		if addressResult.TxOutputsTotal != 0 {
+			address = query
+		}
+	}
 	if height, err := strconv.Atoi(query); err == nil {
 		//otherwise check if it's a string of ints, therefore it's a block
 		blockHeight = int32(height)
@@ -50,6 +57,7 @@ func Search(ctx *Context, params *SearchParams) (*SearchResult, error) {
 	}
 	result.BlockHeight = blockHeight
 	result.Transaction = tx
+	result.Address = address
 	result.Name = name
 	return &result, nil
 }

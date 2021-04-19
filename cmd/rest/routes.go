@@ -16,5 +16,7 @@ var routes = map[string]interface{}{
 	"/tx":            GetTransactionByTxid,
 	"/mempool":       GetMempoolTxs,
 	"/block/height/": GetBlockByHeight,
+	"/address":       GetAddressHistory,
+	"/address/info":  GetAddressInfo,
 	// "/lists/transfer":      GetListTransfers,    //names with the most transfers made
 }
