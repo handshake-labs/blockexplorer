@@ -1,5 +1,9 @@
 package db
 
+import (
+	"github.com/handshake-labs/blockexplorer/pkg/types"
+)
+
 func nullableInt32(v int32) *int32 {
 	if v < 0 {
 		return nil
@@ -9,6 +13,13 @@ func nullableInt32(v int32) *int32 {
 
 func nullableInt64(v int64) *int64 {
 	if v < 0 {
+		return nil
+	}
+	return &v
+}
+
+func nullableBytes(v types.Bytes) *types.Bytes {
+	if len(v) == 0 {
 		return nil
 	}
 	return &v
@@ -32,4 +43,16 @@ func (row *GetNameBidsByHashRow) RevealValue() *int64 {
 
 func (row *GetNameRecordsByHashRow) BlockHeight() *int32 {
 	return nullableInt32(row.BlockHeightNotNull)
+}
+
+func (row *GetTxOutputsByAddressRow) SpendHeight() *int32 {
+	return nullableInt32(row.SpendHeightNotNull)
+}
+
+func (row *GetTxOutputsByAddressRow) IndexPrevout() *int64 {
+	return nullableInt64(row.IndexPrevoutNotNull)
+}
+
+func (row *GetTxOutputsByAddressRow) HashPrevout() *types.Bytes {
+	return nullableBytes(row.HashPrevoutNotNull)
 }

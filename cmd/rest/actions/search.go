@@ -39,8 +39,8 @@ func Search(ctx *Context, params *SearchParams) (*SearchResult, error) {
 		}
 	}
 	//check if there is tx_output for address equal to query string
-	if addressResult, err := ctx.db.GetAddressInfo(ctx, query); err == nil {
-		if addressResult.TxOutputsTotal != 0 {
+	if addressExistsResult, err := ctx.db.AddressExists(ctx, query); err == nil {
+		if addressExistsResult {
 			address = query
 		}
 	}

@@ -18,12 +18,17 @@ type GetAddressHistoryResult struct {
 func GetAddressHistory(ctx *Context, params *GetAddressHistoryParams) (*GetAddressHistoryResult, error) {
 	param := db.GetTxOutputsByAddressParams{}
 	copier.Copy(&param, &params)
-	tx_outputs, err := ctx.db.GetTxOutputsByAddress(ctx, param)
+	history, err := ctx.db.GetTxOutputsByAddress(ctx, param)
 	if err != nil {
 		return nil, err
 	}
 	result := GetAddressHistoryResult{}
-	copier.Copy(&result.History, &tx_outputs)
+	for _, dbEntry := range history {
+		var outEntry HistoryEntry
+		copier.Copy(&outEntry.TxOutput, &dbEntry)
+		copier.Copy(&outEntry.TxInput, &dbEntry)
+		result.History = append(result.History, outEntry)
+	}
 	return &result, nil
 }
 

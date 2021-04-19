@@ -101,7 +101,9 @@ const (
 	AuctionStateReveal AuctionState = "REVEAL"
 )
 
-type HistoryEntry struct {
+type AddressTxOutput struct {
+	Txid                 types.Bytes       `json:"txid"`
+	Index                int64             `json:"index"`
 	Value                int64             `json:"value"`
 	Address              string            `json:"address"`
 	CovenantAction       db.CovenantAction `json:"covenantAction"`
@@ -117,7 +119,16 @@ type HistoryEntry struct {
 	CovenantClaimHeight  types.Bytes       `json:"covenantClaimHeight,omitempty"`
 	CovenantRenewalCount types.Bytes       `json:"covenantRenewalCount,omitempty"`
 	Name                 string            `json:"name,omitempty"`
-	Height               *int32            `json:"height"`
-	SpendTxid            *types.Bytes      `json:"spend_txid"`
-	SpendIndex           *int64            `json:"spend_index"`
+	Height               int32             `json:"height"`
+}
+
+type AddressTxInput struct {
+	HashPrevout  *types.Bytes `json:"txid"`
+	IndexPrevout *int64       `json:"index"`
+	SpendHeight  *int32       `json:"height"`
+}
+
+type HistoryEntry struct {
+	TxOutput AddressTxOutput `json:"tx_output"`
+	TxInput  AddressTxInput  `json:"tx_input"`
 }
