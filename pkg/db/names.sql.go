@@ -39,6 +39,7 @@ SELECT
   bids.txid AS bid_txid, 
   COALESCE(blocks.height, -1)::integer AS block_height_not_null,
   COALESCE(reveals.txid, '\x00')::bytea AS reveal_txid,
+  COALESCE(reveal_outputs.index, -1)::integer AS reveal_index_not_null,
   lockup_outputs.value as lockup_value,
   COALESCE(reveal_outputs.value, -1) as reveal_value_not_null
 FROM                                                  
@@ -46,13 +47,13 @@ FROM
   JOIN tx_inputs as lockup_inputs ON lockup_inputs.txid=bids.txid
   JOIN blocks ON (bids.block_hash = blocks.hash)
   JOIN tx_outputs as lockup_outputs ON lockup_outputs.txid=bids.txid AND lockup_outputs.covenant_action = 'BID'
-  left JOIN tx_inputs reveal_inputs ON
+  LEFT JOIN tx_inputs reveal_inputs ON
      reveal_inputs.hash_prevout = lockup_outputs.txid AND
      reveal_inputs.index_prevout = lockup_outputs.index
-  left JOIN tx_outputs reveal_outputs ON reveal_outputs.covenant_action = 'REVEAL'  AND reveal_outputs.covenant_name_hash = lockup_outputs.covenant_name_hash AND
+  LEFT JOIN tx_outputs reveal_outputs ON reveal_outputs.covenant_action = 'REVEAL'  AND reveal_outputs.covenant_name_hash = lockup_outputs.covenant_name_hash AND
      reveal_inputs.txid = reveal_outputs.txid AND
      reveal_inputs.index = reveal_outputs.index 
-  left JOIN transactions as reveals ON reveal_inputs.txid = reveals.txid AND reveal_outputs.txid = reveals.txid
+  LEFT JOIN transactions AS reveals ON reveal_inputs.txid = reveals.txid AND reveal_outputs.txid = reveals.txid
 WHERE lockup_outputs.covenant_name_hash = $1::bytea
 ORDER BY block_height_not_null DESC NULLS FIRST
 LIMIT $3::integer OFFSET $2::integer
@@ -68,6 +69,7 @@ type GetNameBidsByHashRow struct {
 	BidTxid            types.Bytes
 	BlockHeightNotNull int32
 	RevealTxid         types.Bytes
+	RevealIndexNotNull int32
 	LockupValue        int64
 	RevealValueNotNull int64
 }
@@ -85,6 +87,7 @@ func (q *Queries) GetNameBidsByHash(ctx context.Context, arg GetNameBidsByHashPa
 			&i.BidTxid,
 			&i.BlockHeightNotNull,
 			&i.RevealTxid,
+			&i.RevealIndexNotNull,
 			&i.LockupValue,
 			&i.RevealValueNotNull,
 		); err != nil {

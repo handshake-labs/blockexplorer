@@ -76,6 +76,7 @@ type NameBid struct {
 	BidTxid     types.Bytes `json:"bid_txid"`
 	BlockHeight *int32      `json:"height"`
 	RevealTxid  types.Bytes `json:"reveal_txid"`
+	Index       *int32      `json:"reveal_index"`
 	LockupValue int64       `json:"lockup"`
 	RevealValue *int64      `json:"reveal"`
 }
