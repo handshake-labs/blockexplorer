@@ -39,6 +39,7 @@ SELECT
   bids.txid AS bid_txid, 
   COALESCE(blocks.height, -1)::integer AS block_height_not_null,
   COALESCE(reveals.txid, '\x00')::bytea AS reveal_txid,
+  COALESCE(reveal_blocks.height, -1)::integer AS reveal_height_not_null,
   COALESCE(reveal_outputs.index, -1)::integer AS reveal_index_not_null,
   lockup_outputs.value as lockup_value,
   COALESCE(reveal_outputs.value, -1) as reveal_value_not_null
@@ -54,6 +55,7 @@ FROM
      reveal_inputs.txid = reveal_outputs.txid AND
      reveal_inputs.index = reveal_outputs.index 
   LEFT JOIN transactions AS reveals ON reveal_inputs.txid = reveals.txid AND reveal_outputs.txid = reveals.txid
+  LEFT JOIN blocks as reveal_blocks ON (reveals.block_hash = reveal_blocks.hash)
 WHERE lockup_outputs.covenant_name_hash = $1::bytea
 ORDER BY block_height_not_null DESC NULLS FIRST
 LIMIT $3::integer OFFSET $2::integer
@@ -66,12 +68,13 @@ type GetNameBidsByHashParams struct {
 }
 
 type GetNameBidsByHashRow struct {
-	BidTxid            types.Bytes
-	BlockHeightNotNull int32
-	RevealTxid         types.Bytes
-	RevealIndexNotNull int32
-	LockupValue        int64
-	RevealValueNotNull int64
+	BidTxid             types.Bytes
+	BlockHeightNotNull  int32
+	RevealTxid          types.Bytes
+	RevealHeightNotNull int32
+	RevealIndexNotNull  int32
+	LockupValue         int64
+	RevealValueNotNull  int64
 }
 
 func (q *Queries) GetNameBidsByHash(ctx context.Context, arg GetNameBidsByHashParams) ([]GetNameBidsByHashRow, error) {
@@ -87,6 +90,7 @@ func (q *Queries) GetNameBidsByHash(ctx context.Context, arg GetNameBidsByHashPa
 			&i.BidTxid,
 			&i.BlockHeightNotNull,
 			&i.RevealTxid,
+			&i.RevealHeightNotNull,
 			&i.RevealIndexNotNull,
 			&i.LockupValue,
 			&i.RevealValueNotNull,

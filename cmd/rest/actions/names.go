@@ -139,6 +139,40 @@ type GetNameBidsResult struct {
 	NameBids []NameBid `json:"bids"`
 }
 
+//function to set winnet field to true
+func winningBid(v *GetNameBidsResult) (m *GetNameBidsResult) {
+	var maxRow *NameBid
+	if len(v.NameBids) > 0 {
+		for i := 0; i < len(v.NameBids); i++ {
+			if v.NameBids[i].RevealValue != nil {
+				maxRow = &v.NameBids[i]
+				break
+			}
+		}
+		if maxRow == nil {
+			return v
+		}
+	}
+	for i := 0; i < len(v.NameBids); i++ {
+		if v.NameBids[i].RevealValue == nil {
+			continue
+		}
+		if *v.NameBids[i].RevealValue > *maxRow.RevealValue {
+			maxRow = &v.NameBids[i]
+		}
+		if *v.NameBids[i].RevealValue == *maxRow.RevealValue && *v.NameBids[i].RevealHeight < *maxRow.RevealHeight {
+			maxRow = &v.NameBids[i]
+		}
+		if *v.NameBids[i].RevealValue == *maxRow.RevealValue && *v.NameBids[i].RevealHeight == *maxRow.RevealHeight && *v.NameBids[i].RevealIndex < *maxRow.RevealIndex {
+			maxRow = &v.NameBids[i]
+		}
+	}
+	if maxRow != nil {
+		maxRow.Winner = true
+	}
+	return
+}
+
 func GetNameBids(ctx *Context, params *GetNameBidsParams) (*GetNameBidsResult, error) {
 	name := strings.ToLower(params.Name)
 	hash, err := nameHash(name)
@@ -155,6 +189,7 @@ func GetNameBids(ctx *Context, params *GetNameBidsParams) (*GetNameBidsResult, e
 	}
 	result := GetNameBidsResult{[]NameBid{}}
 	copier.Copy(&result.NameBids, &bids)
+	winningBid(&result)
 	return &result, nil
 }
 

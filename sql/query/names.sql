@@ -21,6 +21,7 @@ SELECT
   bids.txid AS bid_txid, 
   COALESCE(blocks.height, -1)::integer AS block_height_not_null,
   COALESCE(reveals.txid, '\x00')::bytea AS reveal_txid,
+  COALESCE(reveal_blocks.height, -1)::integer AS reveal_height_not_null,
   COALESCE(reveal_outputs.index, -1)::integer AS reveal_index_not_null,
   lockup_outputs.value as lockup_value,
   COALESCE(reveal_outputs.value, -1) as reveal_value_not_null
@@ -36,6 +37,7 @@ FROM
      reveal_inputs.txid = reveal_outputs.txid AND
      reveal_inputs.index = reveal_outputs.index 
   LEFT JOIN transactions AS reveals ON reveal_inputs.txid = reveals.txid AND reveal_outputs.txid = reveals.txid
+  LEFT JOIN blocks as reveal_blocks ON (reveals.block_hash = reveal_blocks.hash)
 WHERE lockup_outputs.covenant_name_hash = sqlc.arg('name_hash')::bytea
 ORDER BY block_height_not_null DESC NULLS FIRST
 LIMIT sqlc.arg('limit')::integer OFFSET sqlc.arg('offset')::integer;
