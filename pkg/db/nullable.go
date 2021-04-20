@@ -61,6 +61,13 @@ func (row *GetTxOutputsByAddressRow) SpendHeight() *int32 {
 	return nullableInt32(row.SpendHeightNotNull)
 }
 
+func (row *GetTxOutputsByAddressRow) Height() *int32 {
+	if row.HeightNotNull == 2147483647 {
+		return nil
+	}
+	return nullableInt32(row.HeightNotNull)
+}
+
 func (row *GetTxOutputsByAddressRow) IndexPrevout() *int64 {
 	return nullableInt64(row.IndexPrevoutNotNull)
 }

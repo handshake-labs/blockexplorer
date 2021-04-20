@@ -122,7 +122,7 @@ type AddressTxOutput struct {
 	CovenantClaimHeight  types.Bytes       `json:"covenantClaimHeight,omitempty"`
 	CovenantRenewalCount types.Bytes       `json:"covenantRenewalCount,omitempty"`
 	Name                 string            `json:"name,omitempty"`
-	Height               int32             `json:"height"`
+	Height               *int32            `json:"height"`
 }
 
 type AddressTxInput struct {
