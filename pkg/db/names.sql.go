@@ -46,7 +46,7 @@ SELECT
 FROM                                                  
   transactions as bids
   JOIN tx_inputs as lockup_inputs ON lockup_inputs.txid=bids.txid
-  JOIN blocks ON (bids.block_hash = blocks.hash)
+  LEFT JOIN blocks ON (bids.block_hash = blocks.hash)
   JOIN tx_outputs as lockup_outputs ON lockup_outputs.txid=bids.txid AND lockup_outputs.covenant_action = 'BID'
   LEFT JOIN tx_inputs reveal_inputs ON
      reveal_inputs.hash_prevout = lockup_outputs.txid AND
@@ -133,7 +133,7 @@ func (q *Queries) GetNameCountsByHash(ctx context.Context, nameHash types.Bytes)
 const getNameOtherActionsByHash = `-- name: GetNameOtherActionsByHash :many
 SELECT
   transactions.txid AS txid,
-  COALESCE(blocks.height, -1)::integer AS block_height,
+  COALESCE(blocks.height, -1)::integer AS block_height_not_null,
   tx_outputs.covenant_action AS covenant_action
 FROM
   tx_outputs 
@@ -157,9 +157,9 @@ type GetNameOtherActionsByHashParams struct {
 }
 
 type GetNameOtherActionsByHashRow struct {
-	Txid           types.Bytes
-	BlockHeight    int32
-	CovenantAction CovenantAction
+	Txid               types.Bytes
+	BlockHeightNotNull int32
+	CovenantAction     CovenantAction
 }
 
 func (q *Queries) GetNameOtherActionsByHash(ctx context.Context, arg GetNameOtherActionsByHashParams) ([]GetNameOtherActionsByHashRow, error) {
@@ -171,7 +171,7 @@ func (q *Queries) GetNameOtherActionsByHash(ctx context.Context, arg GetNameOthe
 	items := []GetNameOtherActionsByHashRow{}
 	for rows.Next() {
 		var i GetNameOtherActionsByHashRow
-		if err := rows.Scan(&i.Txid, &i.BlockHeight, &i.CovenantAction); err != nil {
+		if err := rows.Scan(&i.Txid, &i.BlockHeightNotNull, &i.CovenantAction); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

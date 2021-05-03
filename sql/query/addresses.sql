@@ -17,7 +17,7 @@ FROM tx_outputs
   LEFT JOIN transactions tx2 ON tx_inputs.txid = tx2.txid
   LEFT JOIN blocks  bl2 ON tx2.block_hash = bl2.hash --for height of spend
 WHERE tx_outputs.address = sqlc.arg('address')::text
-ORDER BY height_not_null DESC NULLS LAST
+ORDER BY height_not_null DESC
 LIMIT sqlc.arg('limit')::integer OFFSET sqlc.arg('offset')::integer;
 
 

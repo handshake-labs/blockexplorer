@@ -3,11 +3,12 @@ package actions
 import (
 	"database/sql"
 
+	"strings"
+
 	"github.com/handshake-labs/blockexplorer/pkg/db"
 	"github.com/handshake-labs/blockexplorer/pkg/types"
 	"github.com/jinzhu/copier"
 	"golang.org/x/crypto/sha3"
-	"strings"
 )
 
 const treeInterval = 36

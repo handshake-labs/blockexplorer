@@ -74,7 +74,7 @@ Be aware of .dockerignore which should differ for docker-compose and for docker 
 Tag the image:
 ```
 docker tag sync:blockexplorer us-east4-docker.pkg.dev/extended-ripple-284214/handshake/sync:blockexplorer
-docker tag sync:blockexplorer us-east4-docker.pkg.dev/extended-ripple-284214/handshake/rest:blockexplorer
+docker tag rest:blockexplorer us-east4-docker.pkg.dev/extended-ripple-284214/handshake/rest:blockexplorer
 ```
 
 Next push it to the registry (you need to be authorizied for this action).

@@ -28,7 +28,7 @@ SELECT
 FROM                                                  
   transactions as bids
   JOIN tx_inputs as lockup_inputs ON lockup_inputs.txid=bids.txid
-  JOIN blocks ON (bids.block_hash = blocks.hash)
+  LEFT JOIN blocks ON (bids.block_hash = blocks.hash)
   JOIN tx_outputs as lockup_outputs ON lockup_outputs.txid=bids.txid AND lockup_outputs.covenant_action = 'BID'
   LEFT JOIN tx_inputs reveal_inputs ON
      reveal_inputs.hash_prevout = lockup_outputs.txid AND
@@ -69,7 +69,7 @@ LIMIT 1;
 -- name: GetNameOtherActionsByHash :many
 SELECT
   transactions.txid AS txid,
-  COALESCE(blocks.height, -1)::integer AS block_height,
+  COALESCE(blocks.height, -1)::integer AS block_height_not_null,
   tx_outputs.covenant_action AS covenant_action
 FROM
   tx_outputs 

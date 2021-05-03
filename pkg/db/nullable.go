@@ -53,6 +53,10 @@ func (row *GetNameBidsByHashRow) RevealValue() *int64 {
 	return nullableInt64(row.RevealValueNotNull)
 }
 
+func (row *GetNameOtherActionsByHashRow) BlockHeight() *int32 {
+	return nullableInt32(row.BlockHeightNotNull)
+}
+
 func (row *GetNameRecordsByHashRow) BlockHeight() *int32 {
 	return nullableInt32(row.BlockHeightNotNull)
 }

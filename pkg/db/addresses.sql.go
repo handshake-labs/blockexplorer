@@ -59,7 +59,7 @@ SELECT
   COALESCE(tx_inputs.txid, '\x')::bytea AS hash_prevout_not_null,
   COALESCE(tx_inputs.index, -1) AS index_prevout_not_null,
   COALESCE(bl2.height, -1)::integer AS spend_height_not_null, --height of -1 means mempool, so i need -2 to indicate the block does not exist 
-  COALESCE(blocks.height, 2147483647)::integer AS height_not_null,
+  COALESCE(blocks.height, 2147483647)::integer AS height_not_null, --to have mempool orderd higher than others, this value is max signed int32
   COALESCE(CONVERT_FROM(t2.covenant_name, 'SQL_ASCII'), '')::text AS name
 FROM tx_outputs
   LEFT JOIN tx_outputs t2 ON (tx_outputs.covenant_name_hash = t2.covenant_name_hash AND t2.covenant_name IS NOT NULL)
@@ -69,7 +69,7 @@ FROM tx_outputs
   LEFT JOIN transactions tx2 ON tx_inputs.txid = tx2.txid
   LEFT JOIN blocks  bl2 ON tx2.block_hash = bl2.hash --for height of spend
 WHERE tx_outputs.address = $1::text
-ORDER BY height_not_null DESC NULLS LAST
+ORDER BY height_not_null DESC
 LIMIT $3::integer OFFSET $2::integer
 `
 
