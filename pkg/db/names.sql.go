@@ -35,7 +35,7 @@ func (q *Queries) GetLastNameBlockHeightByActionAndHash(ctx context.Context, arg
 
 const getNameBidsByHash = `-- name: GetNameBidsByHash :many
 SELECT
-  DISTINCT ON (block_height_not_null, bid_txid, lockup_outputs.index)
+  DISTINCT ON (blocks.height, bid_txid, lockup_outputs.index)
   bids.txid AS bid_txid, 
   COALESCE(blocks.height, -1)::integer AS block_height_not_null,
   COALESCE(reveals.txid, '\x00')::bytea AS reveal_txid,
@@ -57,7 +57,7 @@ FROM
   LEFT JOIN transactions AS reveals ON reveal_inputs.txid = reveals.txid AND reveal_outputs.txid = reveals.txid
   LEFT JOIN blocks as reveal_blocks ON (reveals.block_hash = reveal_blocks.hash)
 WHERE lockup_outputs.covenant_name_hash = $1::bytea
-ORDER BY block_height_not_null DESC NULLS FIRST
+ORDER BY blocks.height DESC NULLS FIRST
 LIMIT $3::integer OFFSET $2::integer
 `
 

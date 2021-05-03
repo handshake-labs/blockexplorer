@@ -17,7 +17,7 @@ WHERE covenant_name_hash = sqlc.arg('name_hash')::bytea;
 
 -- name: GetNameBidsByHash :many
 SELECT
-  DISTINCT ON (block_height_not_null, bid_txid, lockup_outputs.index)
+  DISTINCT ON (blocks.height, bid_txid, lockup_outputs.index)
   bids.txid AS bid_txid, 
   COALESCE(blocks.height, -1)::integer AS block_height_not_null,
   COALESCE(reveals.txid, '\x00')::bytea AS reveal_txid,
@@ -39,7 +39,7 @@ FROM
   LEFT JOIN transactions AS reveals ON reveal_inputs.txid = reveals.txid AND reveal_outputs.txid = reveals.txid
   LEFT JOIN blocks as reveal_blocks ON (reveals.block_hash = reveal_blocks.hash)
 WHERE lockup_outputs.covenant_name_hash = sqlc.arg('name_hash')::bytea
-ORDER BY block_height_not_null DESC NULLS FIRST
+ORDER BY blocks.height DESC NULLS FIRST
 LIMIT sqlc.arg('limit')::integer OFFSET sqlc.arg('offset')::integer;
 
 -- name: GetNameRecordsByHash :many
