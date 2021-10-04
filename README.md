@@ -1,19 +1,13 @@
 # Overview 
 
-Backend for hnsnetwork.com. For running it should have:
+Backend for hnsnetwork.com. It consists of:
 
-- hsd node, which has additional rpc method for mempool, check https://github.com/handshake-labs/hsd/tree/hnsnetwork
+- hsd node, which has additional rpc method for full mempool, [link](https://github.com/handshake-labs/hsd/tree/hnsnetwork)
 - postgresql 
 - sync process for syncing data from hsd to postgresql
 - rest process which it the backend itself
 
-# Details
-
-## go2ts
-
-Converts go types into typescript types that are used at the frontend.
-
-`go run -tags typescript github.com/handshake-labs/blockexplorer/cmd/rest > ../<frontend dir>/src/api.ts`
+# Steps
 
 ## docker
 
@@ -61,16 +55,17 @@ go run cmd/sync/*
 go run cmd/rest/*
 ```
 
+## go2ts
 
-TODOS:
-- check what happens if the node stops and has to resync from block 0. will the sync and the db be ok?
-- add links to reveal tx (click on lockup/reveal to follow the link)
+Converts go types into typescript types that are used at the frontend.
 
-Docker build
+`go run -tags typescript github.com/handshake-labs/blockexplorer/cmd/rest > ../<frontend dir>/src/api.ts`
+
 
 ## Dependencies
 
 `go mod download`
+
 `go mod vendor`
 
 ## Docker builds
@@ -85,11 +80,12 @@ rest
 docker build -t rest:blockexplorer -f Dockerfile.rest .
 ```
 
-Be aware of .dockerignore which should differ for docker-compose and for docker build
+Be aware of .dockerignore which should differ for `docker-compose` and for `docker build`.
 
 
 ## Additonal
 
 Showing addresses with a lot of inputs/outputs was in production at cloud, postgresql `enable_hashjoin = off` helped.
+
 Feel free to reach us out at https://t.me/hnsnetwork.
 
