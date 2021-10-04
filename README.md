@@ -1,12 +1,23 @@
-# Tools
+# Overview 
+
+Backend for hnsnetwork.com. For running it should have:
+
+- hsd node, which has additional rpc method for mempool, check https://github.com/handshake-labs/hsd/tree/hnsnetwork
+- postgresql 
+- sync process for syncing data from hsd to postgresql
+- rest process which it the backend itself
+
+# Details
 
 ## go2ts
+
+Converts go types into typescript types that are used at the frontend.
 
 `go run -tags typescript github.com/handshake-labs/blockexplorer/cmd/rest > ../<frontend dir>/src/api.ts`
 
 ## docker
 
-Start PostgreSQL and HSD node containers.
+For local testing you may start PostgreSQL and HSD node containers.
 
 ```
 docker-compose up
@@ -40,8 +51,16 @@ sqlc generate
 
 Synchronize the database
 ```
-go run services/blocks_sync/*.go
+go run cmd/sync/*
 ```
+
+## rest
+
+
+```
+go run cmd/rest/*
+```
+
 
 TODOS:
 - check what happens if the node stops and has to resync from block 0. will the sync and the db be ok?
@@ -49,12 +68,12 @@ TODOS:
 
 Docker build
 
-## Pass dependencies
+## Dependencies
 
 `go mod download`
 `go mod vendor`
 
-## Build
+## Docker builds
 
 sync
 ```
@@ -69,19 +88,8 @@ docker build -t rest:blockexplorer -f Dockerfile.rest .
 Be aware of .dockerignore which should differ for docker-compose and for docker build
 
 
-## Google artifact-registry
+## Additonal
 
-Tag the image:
-```
-docker tag sync:blockexplorer us-east4-docker.pkg.dev/extended-ripple-284214/handshake/sync:blockexplorer
-docker tag rest:blockexplorer us-east4-docker.pkg.dev/extended-ripple-284214/handshake/rest:blockexplorer
-```
-
-Next push it to the registry (you need to be authorizied for this action).
-
-```
-docker push us-east4-docker.pkg.dev/extended-ripple-284214/handshake/sync:blockexplorer
-docker push us-east4-docker.pkg.dev/extended-ripple-284214/handshake/rest:blockexplorer
-```
-
+Showing addresses with a lot of inputs/outputs was in production at cloud, postgresql `enable_hashjoin = off` helped.
+Feel free to reach us out at https://t.me/hnsnetwork.
 
