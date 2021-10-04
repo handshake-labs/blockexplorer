@@ -87,5 +87,5 @@ Be aware of .dockerignore which should differ for `docker-compose` and for `dock
 
 Showing addresses with a lot of inputs/outputs was in production at cloud, postgresql `enable_hashjoin = off` helped.
 
-Feel free to reach us out at https://t.me/hnsnetwork.
+Feel free to reach us [here](https://t.me/hnsnetwork).
 
