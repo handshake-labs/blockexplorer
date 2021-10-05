@@ -7,9 +7,15 @@ Backend for hnsnetwork.com. It consists of:
 - sync process for syncing data from hsd to postgresql
 - rest process which is the backend itself
 
-# Steps
+## Steps
 
-## docker
+### Dependencies
+
+`go mod download`
+
+`go mod vendor`
+
+### Docker
 
 For local testing you may start PostgreSQL and HSD node containers.
 
@@ -17,7 +23,9 @@ For local testing you may start PostgreSQL and HSD node containers.
 docker-compose up
 ```
 
-## env
+For production you should know have your own working postgresql.
+
+### Environment
 
 Load environment variables into current shell session
 
@@ -25,50 +33,40 @@ Load environment variables into current shell session
 . ./env
 ```
 
-## goose
-
+### Goose
 Run SQL migrations
 
 ```
 goose -dir sql/schema postgres $POSTGRES_URI up
 ```
-
-## sqlc
-
+### SQLC
 Generate types and methods from SQL code
 
 ```
 sqlc generate
 ```
+### Sync
 
-## sync
+Now we can run the sync process which will synchronize the database.
 
-Synchronize the database
 ```
 go run cmd/sync/*
 ```
+### Rest
 
-## rest
-
+And now you can start rest API.
 
 ```
 go run cmd/rest/*
 ```
 
-## go2ts
+### go2ts
 
 Converts go types into typescript types that are used at the frontend.
 
 `go run -tags typescript github.com/handshake-labs/blockexplorer/cmd/rest > ../<frontend dir>/src/api.ts`
 
-
-## Dependencies
-
-`go mod download`
-
-`go mod vendor`
-
-## Docker builds
+### Docker builds
 
 sync
 ```
@@ -81,7 +79,6 @@ docker build -t rest:blockexplorer -f Dockerfile.rest .
 ```
 
 Be aware of .dockerignore which should differ for `docker-compose` and for `docker build`.
-
 
 ## Additonal
 
