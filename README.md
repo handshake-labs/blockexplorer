@@ -23,7 +23,7 @@ For local testing you may start PostgreSQL and HSD node containers.
 docker-compose up
 ```
 
-For production you should know have your own working postgresql.
+For production you should have your own working postgresql.
 
 ### Environment
 
@@ -57,7 +57,7 @@ go run cmd/sync/*
 And now you can start rest API.
 
 ```
-go run cmd/rest/*
+go run github.com/handshake-labs/blockexplorer/cmd/rest
 ```
 
 ### go2ts
