@@ -1,29 +1,21 @@
 # Overview 
 
-Backend for hnsnetwork.com. For running it should have:
+Backend for hnsnetwork.com. It consists of:
 
-- hsd node, which has additional rpc method for mempool, check https://github.com/handshake-labs/hsd/tree/hnsnetwork
+- hsd node, which has additional rpc method for full mempool, [link](https://github.com/handshake-labs/hsd/tree/hnsnetwork)
 - postgresql 
 - sync process for syncing data from hsd to postgresql
-- rest process which it the backend itself
+- rest process which is the backend itself
 
-# Details
+## Steps
 
-## go2ts
+### Dependencies
 
-Converts go types into typescript types that are used at the frontend.
+`go mod download`
 
-`go run -tags typescript github.com/handshake-labs/blockexplorer/cmd/rest > ../<frontend dir>/src/api.ts`
+`go mod vendor`
 
-## docker
-
-For local testing you may start PostgreSQL and HSD node containers.
-
-```
-docker-compose up
-```
-
-## env
+### Environment
 
 Load environment variables into current shell session
 
@@ -31,49 +23,53 @@ Load environment variables into current shell session
 . ./env
 ```
 
-## goose
+### Goose
+Run SQL migrations. You need to install [goose](https://github.com/pressly/goose) first:
 
-Run SQL migrations
+```
+go install github.com/pressly/goose/v3/cmd/goose@latest
+```
 
 ```
 goose -dir sql/schema postgres $POSTGRES_URI up
 ```
-
-## sqlc
-
+### SQLC
 Generate types and methods from SQL code
 
 ```
 sqlc generate
 ```
+### Sync
 
-## sync
+Now we can run the sync process which will synchronize the database.
 
-Synchronize the database
 ```
 go run cmd/sync/*
 ```
+### Rest
 
-## rest
-
+And now you can start rest API.
 
 ```
-go run cmd/rest/*
+go run github.com/handshake-labs/blockexplorer/cmd/rest
 ```
 
+### go2ts
 
-TODOS:
-- check what happens if the node stops and has to resync from block 0. will the sync and the db be ok?
-- add links to reveal tx (click on lockup/reveal to follow the link)
+Converts go types into typescript types that are used at the frontend.
 
-Docker build
+`go run -tags typescript github.com/handshake-labs/blockexplorer/cmd/rest > ../<frontend dir>/src/api.ts`
 
-## Dependencies
 
-`go mod download`
-`go mod vendor`
+## Additonal settings
 
-## Docker builds
+Showing addresses with a lot of inputs/outputs was slow in production at cloud, postgresql `enable_hashjoin = off` helped.
+
+Feel free to reach us [here](https://t.me/hnsnetwork).
+
+### Docker builds
+
+It's possible to use the explorer as docker container.
 
 sync
 ```
@@ -85,11 +81,4 @@ rest
 docker build -t rest:blockexplorer -f Dockerfile.rest .
 ```
 
-Be aware of .dockerignore which should differ for docker-compose and for docker build
-
-
-## Additonal
-
-Showing addresses with a lot of inputs/outputs was in production at cloud, postgresql `enable_hashjoin = off` helped.
-Feel free to reach us out at https://t.me/hnsnetwork.
-
+Be aware of .dockerignore which should differ for `docker-compose` and for `docker build`.
