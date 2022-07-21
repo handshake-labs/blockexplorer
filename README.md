@@ -2,7 +2,7 @@
 
 Backend for hnsnetwork.com. It consists of:
 
-- hsd node, which has additional rpc method for full mempool, [link](https://github.com/handshake-labs/hsd/tree/hnsnetwork)
+- hsd node
 - postgresql 
 - sync process for syncing data from hsd to postgresql
 - rest process which is the backend itself
