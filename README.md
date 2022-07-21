@@ -15,16 +15,6 @@ Backend for hnsnetwork.com. It consists of:
 
 `go mod vendor`
 
-### Docker
-
-For local testing you may start PostgreSQL and HSD node containers.
-
-```
-docker-compose up
-```
-
-For production you should have your own working postgresql.
-
 ### Environment
 
 Load environment variables into current shell session
@@ -34,7 +24,11 @@ Load environment variables into current shell session
 ```
 
 ### Goose
-Run SQL migrations
+Run SQL migrations. You need to install [goose](https://github.com/pressly/goose) first:
+
+```
+go install github.com/pressly/goose/v3/cmd/goose@latest
+```
 
 ```
 goose -dir sql/schema postgres $POSTGRES_URI up
@@ -66,7 +60,16 @@ Converts go types into typescript types that are used at the frontend.
 
 `go run -tags typescript github.com/handshake-labs/blockexplorer/cmd/rest > ../<frontend dir>/src/api.ts`
 
+
+## Additonal settings
+
+Showing addresses with a lot of inputs/outputs was slow in production at cloud, postgresql `enable_hashjoin = off` helped.
+
+Feel free to reach us [here](https://t.me/hnsnetwork).
+
 ### Docker builds
+
+It's possible to use the explorer as docker container.
 
 sync
 ```
@@ -79,10 +82,3 @@ docker build -t rest:blockexplorer -f Dockerfile.rest .
 ```
 
 Be aware of .dockerignore which should differ for `docker-compose` and for `docker build`.
-
-## Additonal
-
-Showing addresses with a lot of inputs/outputs was slow in production at cloud, postgresql `enable_hashjoin = off` helped.
-
-Feel free to reach us [here](https://t.me/hnsnetwork).
-
