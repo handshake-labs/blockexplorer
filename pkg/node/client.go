@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+
 	"strings"
 
 	"net/http"
@@ -40,6 +41,7 @@ func (client *Client) do(ctx context.Context, method string, path string, body i
 		return err
 	}
 	defer res.Body.Close()
+
 	return json.NewDecoder(res.Body).Decode(target)
 }
 

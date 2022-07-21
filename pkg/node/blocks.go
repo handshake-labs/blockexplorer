@@ -32,3 +32,5 @@ func (client *Client) GetBlocksHeight(ctx context.Context) (int32, error) {
 	}
 	return height, nil
 }
+
+
