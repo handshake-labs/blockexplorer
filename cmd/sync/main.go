@@ -28,6 +28,6 @@ func main() {
 			time.Sleep(time.Second)
 			continue
 		}
-		time.Sleep(10 * time.Second)
+		time.Sleep(os.Getenv("UPDATE_DB_INTERVAL") * time.Second)
 	}
 }
