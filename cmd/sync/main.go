@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"os"
 	"time"
+	"strconv"
 
 	"log"
 
@@ -14,6 +15,10 @@ import (
 
 func main() {
 	pg, err := sql.Open("postgres", os.Getenv("POSTGRES_URI"))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	updateInterval, err := strconv.Atoi(os.Getenv("UPDATE_DB_INTERVAL"))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -28,6 +33,7 @@ func main() {
 			time.Sleep(time.Second)
 			continue
 		}
-		time.Sleep(os.Getenv("UPDATE_DB_INTERVAL") * time.Second)
+		time.Sleep(time.Duration(updateInterval) * time.Second)
 	}
 }
+
