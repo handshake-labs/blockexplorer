@@ -37,6 +37,7 @@ goose -dir sql/schema postgres $POSTGRES_URI up
 Generate types and methods from SQL code
 
 ```
+go install github.com/kyleconroy/sqlc/cmd/sqlc@latest
 sqlc generate
 ```
 ### Sync
