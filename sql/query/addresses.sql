@@ -8,7 +8,7 @@ SELECT
   COALESCE(tx_inputs.index, -1) AS index_prevout_not_null,
   COALESCE(bl2.height, -1)::integer AS spend_height_not_null, --height of -1 means mempool, so i need -2 to indicate the block does not exist 
   COALESCE(blocks.height, 2147483647)::integer AS height_not_null, --to have mempool orderd higher than others, this value is max signed int32
-  COALESCE(CONVERT_FROM(t2.covenant_name, 'SQL_ASCII'), '')::text AS name
+  COALESCE(CONVERT_FROM(t2.covenant_name, 'UTF8'), '')::text AS name
 FROM tx_outputs
   LEFT JOIN tx_outputs t2 ON (tx_outputs.covenant_name_hash = t2.covenant_name_hash AND t2.covenant_name IS NOT NULL)
   LEFT JOIN tx_inputs ON tx_outputs.txid = tx_inputs.hash_prevout AND tx_outputs.index = tx_inputs.index_prevout

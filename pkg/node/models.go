@@ -34,7 +34,7 @@ type SingleTransaction struct {
 	BlockHash  types.Bytes `json:"blockHash"`
 	IndexBlock int32       `json:"index"`
 	Version    int32       `json:"version"`
-	Locktime   int32       `json:"locktime"`
+	Locktime   int64       `json:"locktime"`
 	Size       int64       `json:"size"`
 	TxInputs   []SingleTxInput   `json:"inputs"`
 	TxOutputs  []SingleTxOutput  `json:"outputs"`
@@ -66,7 +66,7 @@ type Transaction struct {
 	BlockHash  types.Bytes `json:"blockHash"`
 	IndexBlock int32       `json:"index"`
 	Version    int32       `json:"version"`
-	Locktime   int32       `json:"locktime"`
+	Locktime   int64       `json:"locktime"`
 	Size       int64       `json:"size"`
 	TxInputs   []TxInput   `json:"vin"`
 	TxOutputs  []TxOutput  `json:"vout"`

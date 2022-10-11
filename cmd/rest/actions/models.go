@@ -34,7 +34,7 @@ type Transaction struct {
 	Fee         int64       `json:"fee"`
 	Rate        int64       `json:"rate"`
 	Version     int32       `json:"version"`
-	Locktime    int32       `json:"locktime"`
+	Locktime    int64       `json:"locktime"`
 	Size        int64       `json:"size"`
 	Height      int64       `json:"height"`
 	TxInputs    []TxInput   `json:"inputs"`

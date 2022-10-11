@@ -1,7 +1,7 @@
 -- name: GetReservedName :one
 SELECT 
-CONVERT_FROM(origin_name, 'SQL_ASCII')::text as origin_name,
-CONVERT_FROM(name, 'SQL_ASCII')::text as name,
+CONVERT_FROM(origin_name::bytea, 'UTF8')::text as origin_name,
+CONVERT_FROM(name::bytea, 'UTF8')::text as name,
 name_hash,
 claim_amount
 FROM reserved_names

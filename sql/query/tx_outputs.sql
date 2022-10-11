@@ -1,7 +1,7 @@
 -- name: GetTxOutputsByTxid :many
 SELECT DISTINCT ON(t1.index)
   t1.*,
-  COALESCE(CONVERT_FROM(t2.covenant_name, 'SQL_ASCII'), '')::text AS name
+  COALESCE(CONVERT_FROM(t2.covenant_name, 'UTF8'), '')::text AS name
 FROM
   tx_outputs t1
   LEFT JOIN tx_outputs t2 ON (t1.covenant_name_hash = t2.covenant_name_hash AND t2.covenant_name IS NOT NULL)
